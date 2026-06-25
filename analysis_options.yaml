@@ -1,0 +1,26 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Style
+    prefer_single_quotes: true
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    unnecessary_late: true
+    require_trailing_commas: true
+    sort_child_properties_last: true
+
+    # Safety
+    avoid_print: true
+    avoid_unnecessary_containers: true
+    avoid_web_libraries_in_flutter: true
+    use_build_context_synchronously: true
+    use_key_in_widget_constructors: true
+
+    # Readability
+    prefer_const_declarations: true
+    sized_box_for_whitespace: true
+    always_declare_return_types: true
+    always_put_control_body_on_new_line: true
