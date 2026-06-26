@@ -176,47 +176,46 @@ class _KpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cards = [
+      KpiCard(
+        title: 'Total Items',
+        value: invStats.totalItems.toString(),
+        icon: AppIcons.inventory,
+      ),
+      KpiCard(
+        title: 'Low Stock',
+        value: invStats.lowStockCount.toString(),
+        icon: AppIcons.warning,
+        trend: invStats.lowStockCount > 0 ? -12.5 : 0,
+      ),
+      KpiCard(
+        title: 'Out of Stock',
+        value: invStats.outOfStockCount.toString(),
+        icon: AppIcons.error,
+      ),
+      KpiCard(
+        title: 'Total Value',
+        value: '\$${_formatValue(invStats.totalValue)}',
+        icon: Icons.account_balance_wallet_outlined,
+      ),
+    ];
+
     return ResponsiveBuilder(
-      mobile: (context) => Column(
+      mobile: (_) => Column(
         children: [
           Row(
             children: [
-              Expanded(
-                child: KpiCard(
-                  title: 'Total Items',
-                  value: invStats.totalItems.toString(),
-                  icon: AppIcons.inventory,
-                ),
-              ),
+              Expanded(child: cards[0]),
               const SizedBox(width: 12),
-              Expanded(
-                child: KpiCard(
-                  title: 'Low Stock',
-                  value: invStats.lowStockCount.toString(),
-                  icon: AppIcons.warning,
-                  trend: invStats.lowStockCount > 0 ? -12.5 : 0,
-                ),
-              ),
+              Expanded(child: cards[1]),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: KpiCard(
-                  title: 'Out of Stock',
-                  value: invStats.outOfStockCount.toString(),
-                  icon: AppIcons.error,
-                ),
-              ),
+              Expanded(child: cards[2]),
               const SizedBox(width: 12),
-              Expanded(
-                child: KpiCard(
-                  title: 'Total Value',
-                  value: '\$${_formatValue(invStats.totalValue)}',
-                  icon: Icons.account_balance_wallet_outlined,
-                ),
-              ),
+              Expanded(child: cards[3]),
             ],
           ),
           const SizedBox(height: 12),
@@ -229,45 +228,21 @@ class _KpiGrid extends StatelessWidget {
           ),
         ],
       ),
-      tablet: (context) => Column(
+      tablet: (_) => Column(
         children: [
           Row(
             children: [
-              Expanded(
-                child: KpiCard(
-                  title: 'Total Items',
-                  value: invStats.totalItems.toString(),
-                  icon: AppIcons.inventory,
-                ),
-              ),
+              Expanded(child: cards[0]),
               const SizedBox(width: 12),
-              Expanded(
-                child: KpiCard(
-                  title: 'Low Stock',
-                  value: invStats.lowStockCount.toString(),
-                  icon: AppIcons.warning,
-                ),
-              ),
+              Expanded(child: cards[1]),
               const SizedBox(width: 12),
-              Expanded(
-                child: KpiCard(
-                  title: 'Out of Stock',
-                  value: invStats.outOfStockCount.toString(),
-                  icon: AppIcons.error,
-                ),
-              ),
+              Expanded(child: cards[2]),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: KpiCard(
-                  title: 'Total Value',
-                  value: '\$${_formatValue(invStats.totalValue)}',
-                  icon: Icons.account_balance_wallet_outlined,
-                ),
-              ),
+              Expanded(child: cards[3]),
               const SizedBox(width: 12),
               Expanded(
                 child: KpiCard(
@@ -275,11 +250,31 @@ class _KpiGrid extends StatelessWidget {
                   value: '${workStats.activeEmployees} employees',
                   subtitle: '${workStats.pendingTasks} pending tasks',
                   icon: AppIcons.people,
+                  onTap: () => context.pushNamed(AppRoutes.employees),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(child: Container()),
             ],
+          ),
+        ],
+      ),
+      desktop: (_) => Row(
+        children: [
+          Expanded(child: cards[0]),
+          const SizedBox(width: 12),
+          Expanded(child: cards[1]),
+          const SizedBox(width: 12),
+          Expanded(child: cards[2]),
+          const SizedBox(width: 12),
+          Expanded(child: cards[3]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: KpiCard(
+              title: 'Workforce',
+              value: '${workStats.activeEmployees} employees',
+              subtitle: '${workStats.pendingTasks} pending tasks',
+              icon: AppIcons.people,
+              onTap: () => context.pushNamed(AppRoutes.employees),
+            ),
           ),
         ],
       ),

@@ -169,48 +169,79 @@ class _EmployeeListView extends StatelessWidget {
       itemCount: employees.length,
       itemBuilder: (context, index) {
         final employee = employees[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Color(
-                employee.avatarColor,
-              ).withValues(alpha: 0.2),
-              child: Text(
-                employee.initials,
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: Color(employee.avatarColor),
+        final avatarColor = Color(employee.avatarColor);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+            ),
+            child: InkWell(
+              onTap: () => context.push('/employees/${employee.id}'),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    // Avatar
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: avatarColor.withValues(alpha: 0.15),
+                      child: Text(
+                        employee.initials,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: avatarColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Name + details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            employee.fullName,
+                            style: AppTextStyles.body.copyWith(color: cs.onSurface),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${employee.role.label} · ${employee.department.label}',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Status + chevron
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (!employee.isActive)
+                          Text(
+                            'Inactive',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: cs.outline,
+                            ),
+                          ),
+                        const SizedBox(height: 4),
+                        Icon(AppIcons.forward, size: 16, color: cs.outline),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            title: Text(
-              employee.fullName,
-              style: AppTextStyles.body.copyWith(color: cs.onSurface),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${employee.role.label} · ${employee.department.label}',
-                  style: AppTextStyles.caption.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  employee.email,
-                  style: AppTextStyles.caption.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            trailing: employee.isActive
-                ? Icon(AppIcons.forward, color: cs.outline)
-                : Text(
-                    'Inactive',
-                    style: AppTextStyles.labelSmall.copyWith(color: cs.outline),
-                  ),
-            onTap: () => context.push('/employees/${employee.id}'),
           ),
         );
       },
@@ -250,7 +281,7 @@ class _EmployeeGridCard extends StatelessWidget {
   final Employee employee;
 
   /// Aspect ratio for grid card sizing.
-  static const double aspectRatio = 0.78;
+  static const double aspectRatio = 0.95;
 
   @override
   Widget build(BuildContext context) {
@@ -258,43 +289,50 @@ class _EmployeeGridCard extends StatelessWidget {
     final avatarColor = Color(employee.avatarColor);
 
     return Card(
-      clipBehavior: Clip.antiAlias,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
       child: InkWell(
         onTap: () => context.push('/employees/${employee.id}'),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row: avatar + active indicator
+              // Top: avatar + status dot
               Row(
                 children: [
                   CircleAvatar(
-                    radius: 20,
-                    backgroundColor: avatarColor.withValues(alpha: 0.2),
+                    radius: 18,
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
                     child: Text(
                       employee.initials,
-                      style: AppTextStyles.labelLarge.copyWith(
+                      style: AppTextStyles.labelMedium.copyWith(
                         color: avatarColor,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   const Spacer(),
                   if (!employee.isActive)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
+                      width: 8,
+                      height: 8,
                       decoration: BoxDecoration(
-                        color: cs.outline.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
+                        color: cs.outline,
+                        shape: BoxShape.circle,
                       ),
-                      child: Text(
-                        'Inactive',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: cs.outline,
-                        ),
+                    )
+                  else
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: cs.primary,
+                        shape: BoxShape.circle,
                       ),
                     ),
                 ],
@@ -311,7 +349,7 @@ class _EmployeeGridCard extends StatelessWidget {
               // Role · Department
               Text(
                 '${employee.role.label} · ${employee.department.label}',
-                style: AppTextStyles.caption.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: cs.onSurfaceVariant,
                 ),
                 maxLines: 1,
@@ -321,7 +359,7 @@ class _EmployeeGridCard extends StatelessWidget {
               // Email
               Text(
                 employee.email,
-                style: AppTextStyles.caption.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: cs.onSurfaceVariant,
                 ),
                 maxLines: 1,

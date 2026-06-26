@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../persistence/hive_manager.dart';
+import '../persistence/safe_hive.dart';
 import '../persistence/write_ahead_log.dart';
 import '../models/item_model.dart';
 import '../models/category_model.dart';
@@ -10,6 +11,8 @@ import '../models/repositories.dart';
 import '../models/employee_repository.dart';
 import '../models/stock_movement_model.dart';
 import '../models/stock_movement_repository.dart';
+import '../models/alert_log_model.dart';
+import '../models/alert_log_repository.dart';
 import '../core/errors.dart';
 import '../core/result.dart';
 
@@ -19,6 +22,13 @@ final appInitProvider = FutureProvider<void>((ref) async {
   await HiveManager.init();
   await WriteAheadLog.recover();
   await WriteAheadLog.cleanup();
+});
+
+/// Checks if company onboarding is complete.
+/// Returns true if the user has registered their company details.
+final onboardingCompleteProvider = FutureProvider<bool>((ref) async {
+  final box = await HiveManager.getBox(HiveBoxes.settings);
+  return box.safeGet<bool>('has_completed_onboarding') ?? false;
 });
 
 /// Theme mode provider (system, light, dark).
@@ -36,25 +46,55 @@ final appSettingsProvider =
 class AppSettings {
   const AppSettings({
     this.companyName = '',
-    this.currency = 'USD',
+    this.panNumber = '',
+    this.registrationNumber = '',
+    this.registrationLocation = '',
+    this.currency = 'NPR',
     this.lowStockThreshold = 10,
+    this.hasCompletedOnboarding = false,
   });
 
   final String companyName;
+  final String panNumber;
+  final String registrationNumber;
+  final String registrationLocation;
   final String currency;
   final int lowStockThreshold;
+  final bool hasCompletedOnboarding;
 
   AppSettings copyWith({
     String? companyName,
+    String? panNumber,
+    String? registrationNumber,
+    String? registrationLocation,
     String? currency,
     int? lowStockThreshold,
+    bool? hasCompletedOnboarding,
   }) {
     return AppSettings(
       companyName: companyName ?? this.companyName,
+      panNumber: panNumber ?? this.panNumber,
+      registrationNumber: registrationNumber ?? this.registrationNumber,
+      registrationLocation: registrationLocation ?? this.registrationLocation,
       currency: currency ?? this.currency,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
+      hasCompletedOnboarding:
+          hasCompletedOnboarding ?? this.hasCompletedOnboarding,
     );
   }
+
+  /// Returns the currency symbol for the current currency setting.
+  String get currencySymbol => switch (currency) {
+    'NPR' => '₨',
+    'USD' => '\$',
+    'EUR' => '€',
+    'GBP' => '£',
+    'JPY' => '¥',
+    'INR' => '₹',
+    'CAD' => 'C\$',
+    'AUD' => 'A\$',
+    _ => currency,
+  };
 }
 
 class AppSettingsNotifier extends StateNotifier<AppSettings> {
@@ -64,12 +104,28 @@ class AppSettingsNotifier extends StateNotifier<AppSettings> {
     state = state.copyWith(companyName: name);
   }
 
+  void updatePanNumber(String pan) {
+    state = state.copyWith(panNumber: pan);
+  }
+
+  void updateRegistrationNumber(String regNum) {
+    state = state.copyWith(registrationNumber: regNum);
+  }
+
+  void updateRegistrationLocation(String location) {
+    state = state.copyWith(registrationLocation: location);
+  }
+
   void updateCurrency(String currency) {
     state = state.copyWith(currency: currency);
   }
 
   void updateLowStockThreshold(int threshold) {
     state = state.copyWith(lowStockThreshold: threshold);
+  }
+
+  void markOnboardingComplete() {
+    state = state.copyWith(hasCompletedOnboarding: true);
   }
 }
 
@@ -231,13 +287,23 @@ class ItemCrudNotifier extends StateNotifier<AsyncValue<void>> {
     String itemId,
     int adjustment, {
     String? reason,
+    String? reference,
   }) async {
     state = const AsyncValue.loading();
     final result = await ItemRepository.instance.adjustStock(
       itemId,
       adjustment,
       reason: reason,
+      reference: reference,
     );
+    state = const AsyncValue.data(null);
+    return result;
+  }
+
+  /// Undo a previous stock movement.
+  Future<Result<Item, AppError>> undoMovement(String movementId) async {
+    state = const AsyncValue.loading();
+    final result = await ItemRepository.instance.undoMovement(movementId);
     state = const AsyncValue.data(null);
     return result;
   }
@@ -416,3 +482,20 @@ class MovementFilter {
   @override
   int get hashCode => Object.hash(dateRange, movementType, searchQuery);
 }
+
+/// All stock movements for a specific item, newest first.
+final movementsByItemProvider =
+    FutureProvider.family<List<StockMovement>, String>((ref, itemId) async {
+  final movements = await StockMovementRepository.instance.getByItem(itemId);
+  movements.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return movements;
+});
+
+/// Alert log providers
+final alertLogProvider = FutureProvider<List<AlertLog>>((ref) async {
+  return AlertLogRepository.instance.getAll();
+});
+
+final unacknowledgedAlertsProvider = FutureProvider<List<AlertLog>>((ref) async {
+  return AlertLogRepository.instance.getUnacknowledged();
+});

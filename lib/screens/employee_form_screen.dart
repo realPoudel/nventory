@@ -191,11 +191,11 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _hourlyRateController,
-                decoration: const InputDecoration(
-                  labelText: 'Hourly Rate',
-                  prefixText: '\$ ',
-                ),
+              controller: _hourlyRateController,
+              decoration: const InputDecoration(
+                labelText: 'Hourly Rate',
+                prefixText: '₨ ',
+              ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -259,20 +259,12 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
         ref.invalidate(filteredEmployeesProvider);
         ref.invalidate(workforceStatsProvider);
         if (mounted) {
-          showPremiumSnackBar(
-            context,
-            message: isEditing ? 'Employee updated' : 'Employee added',
-            icon: AppIcons.success,
-          );
+          showPremiumToast(context, message: isEditing ? 'Employee updated' : 'Employee added', type: ToastType.success);
           context.pop();
         }
       case Err<Employee, AppError>(:final error):
         if (mounted) {
-          showPremiumSnackBar(
-            context,
-            message: 'Error: ${error.message}',
-            icon: AppIcons.error,
-          );
+          showPremiumToast(context, message: 'Error: ${error.message}', type: ToastType.error);
         }
     }
   }

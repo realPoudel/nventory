@@ -40,6 +40,12 @@ class HiveManager {
     return box;
   }
 
+  /// Get an already-open box synchronously (for redirect guards).
+  /// Returns null if the box hasn't been opened yet.
+  static Box? getBoxSync(String name) {
+    return _openBoxes[name];
+  }
+
   /// Close a specific box.
   static Future<void> closeBox(String name) async {
     final box = _openBoxes.remove(name);

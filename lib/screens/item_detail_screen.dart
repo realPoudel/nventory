@@ -7,9 +7,10 @@ import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/item_model.dart';
 import '../models/category_model.dart';
+import '../models/stock_movement_model.dart';
 import '../providers.dart';
-import '../routing/app_router.dart';
 import '../responsive_breakpoints.dart';
+import '../routing/app_router.dart';
 import '../ui/app_components.dart';
 
 /// Item detail screen with stock adjustment.
@@ -104,6 +105,8 @@ class _ItemDetailView extends ConsumerWidget {
                   _showStockAdjustment(context, ref, isAddition: true);
                 case 'stock_out':
                   _showStockAdjustment(context, ref, isAddition: false);
+                case 'history':
+                  context.push('/inventory/${item.id}/history');
                 case 'delete':
                   _confirmDelete(context, ref);
               }
@@ -122,6 +125,14 @@ class _ItemDetailView extends ConsumerWidget {
                 child: ListTile(
                   leading: Icon(Icons.remove_circle_outline),
                   title: Text('Stock Out'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'history',
+                child: ListTile(
+                  leading: Icon(Icons.history),
+                  title: Text('Stock History'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -544,88 +555,234 @@ class _ItemDetailView extends ConsumerWidget {
     required bool isAddition,
   }) {
     final controller = TextEditingController();
+    MovementType selectedType = isAddition
+        ? MovementType.stockIn
+        : MovementType.stockOut;
     String? reason;
+    String reference = '';
 
-    AppDialog.show<void>(
+    final presetReasons = <String>[];
+    if (isAddition) {
+      presetReasons.addAll([
+        'Received from supplier',
+        'Returned by customer',
+        'Physical count correction',
+        'Other',
+      ]);
+    } else {
+      presetReasons.addAll([
+        'Sold',
+        'Used internally',
+        'Damaged / Expired',
+        'Lost / Missing',
+        'Physical count correction',
+        'Other',
+      ]);
+    }
+
+    showDialog<void>(
       context: context,
-      title: isAddition ? 'Stock In' : 'Stock Out',
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Current stock: ${item.quantity} ${item.unit.abbreviation}',
-            style: AppTextStyles.body,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: 'Quantity',
-              suffixText: item.unit.abbreviation,
-            ),
-            keyboardType: TextInputType.number,
-            autofocus: true,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            decoration: const InputDecoration(
-              labelText: 'Reason (optional)',
-              hintText: 'e.g., Received from supplier',
-            ),
-            onChanged: (value) => reason = value,
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final quantity = int.tryParse(controller.text);
-            if (quantity == null || quantity <= 0) {
-              return;
-            }
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final cs = Theme.of(context).colorScheme;
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    selectedType == MovementType.stockIn
+                        ? Icons.add_circle_outline
+                        : selectedType == MovementType.stockOut
+                        ? Icons.remove_circle_outline
+                        : Icons.tune,
+                    color: cs.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Stock Adjustment'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Current stock info
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(AppIcons.inventory, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Current: ${item.quantity} ${item.unit.abbreviation}',
+                            style: AppTextStyles.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-            final adjustment = isAddition ? quantity : -quantity;
-            final result = await ref
-                .read(itemCrudProvider.notifier)
-                .adjustStock(item.id, adjustment, reason: reason);
+                    // Movement type selector
+                    const Text('Type', style: AppTextStyles.labelLarge),
+                    const SizedBox(height: 8),
+                    SegmentedButton<MovementType>(
+                      segments: const [
+                        ButtonSegment<MovementType>(
+                          value: MovementType.stockIn,
+                          label: Text('In'),
+                          icon: Icon(Icons.add, size: 16),
+                        ),
+                        ButtonSegment<MovementType>(
+                          value: MovementType.stockOut,
+                          label: Text('Out'),
+                          icon: Icon(Icons.remove, size: 16),
+                        ),
+                        ButtonSegment<MovementType>(
+                          value: MovementType.adjustment,
+                          label: Text('Adjust'),
+                          icon: Icon(Icons.tune, size: 16),
+                        ),
+                      ],
+                      selected: {selectedType},
+                      onSelectionChanged: (Set<MovementType> selection) {
+                        setDialogState(() {
+                          selectedType = selection.first;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
+                    // Quantity
+                    TextField(
+                      controller: controller,
+                      decoration: InputDecoration(
+                        labelText: 'Quantity *',
+                        suffixText: item.unit.abbreviation,
+                      ),
+                      keyboardType: TextInputType.number,
+                      autofocus: true,
+                    ),
+                    const SizedBox(height: 16),
 
-            switch (result) {
-              case Ok<Item, AppError>():
-                ref.invalidate(itemByIdProvider(item.id));
-                ref.invalidate(itemsProvider);
-                ref.invalidate(filteredItemsProvider);
-                ref.invalidate(lowStockItemsProvider);
-                ref.invalidate(dashboardStatsProvider);
-                if (context.mounted) {
-                  showPremiumSnackBar(
-                    context,
-                    message: isAddition
-                        ? 'Added $quantity ${item.unit.abbreviation}'
-                        : 'Removed $quantity ${item.unit.abbreviation}',
-                    icon: AppIcons.success,
-                  );
-                }
-              case Err<Item, AppError>(:final error):
-                if (context.mounted) {
-                  showPremiumSnackBar(
-                    context,
-                    message: error.message,
-                    icon: AppIcons.error,
-                  );
-                }
-            }
+                    // Preset reasons
+                    const Text('Reason', style: AppTextStyles.labelLarge),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: presetReasons.map((preset) {
+                        final isSelected = reason == preset;
+                        return FilterChip(
+                          label: Text(preset),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setDialogState(() {
+                              reason = preset == 'Other' ? null : preset;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    if (reason == null || reason == 'Other') ...[
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: const InputDecoration(
+                          labelText: 'Custom reason',
+                          hintText: 'Describe the reason...',
+                        ),
+                        onChanged: (value) => reason = value,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+
+                    // Reference
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Reference (optional)',
+                        hintText: 'e.g., PO-123, Sale #456',
+                        prefixIcon: Icon(AppIcons.barcode),
+                      ),
+                      onChanged: (value) => reference = value,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final quantity = int.tryParse(controller.text);
+                    if (quantity == null || quantity <= 0) {
+                      return;
+                    }
+
+                    int adjustment;
+                    if (selectedType == MovementType.stockIn) {
+                      adjustment = quantity;
+                    } else if (selectedType == MovementType.stockOut) {
+                      adjustment = -quantity;
+                    } else {
+                      // Adjustment: relative change
+                      adjustment = quantity;
+                    }
+
+                    final result = await ref
+                        .read(itemCrudProvider.notifier)
+                        .adjustStock(
+                          item.id,
+                          adjustment,
+                          reason: reason,
+                          reference: reference.isNotEmpty ? reference : null,
+                        );
+
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+
+                    switch (result) {
+                      case Ok<Item, AppError>():
+                        ref.invalidate(itemByIdProvider(item.id));
+                        ref.invalidate(itemsProvider);
+                        ref.invalidate(filteredItemsProvider);
+                        ref.invalidate(lowStockItemsProvider);
+                        ref.invalidate(dashboardStatsProvider);
+                        ref.invalidate(movementsByItemProvider(item.id));
+                        if (dialogContext.mounted) {
+                          showPremiumSnackBar(
+                            context,
+                            message: selectedType == MovementType.stockIn
+                                ? 'Added $quantity ${item.unit.abbreviation}'
+                                : selectedType == MovementType.stockOut
+                                ? 'Removed $quantity ${item.unit.abbreviation}'
+                                : 'Adjusted by $quantity',
+                            icon: AppIcons.success,
+                          );
+                        }
+                      case Err<Item, AppError>(:final error):
+                        if (dialogContext.mounted) {
+                          showPremiumSnackBar(
+                            context,
+                            message: error.message,
+                            icon: AppIcons.error,
+                          );
+                        }
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
+            );
           },
-          child: const Text('Confirm'),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -652,19 +809,19 @@ class _ItemDetailView extends ConsumerWidget {
         ref.invalidate(filteredItemsProvider);
         ref.invalidate(dashboardStatsProvider);
         if (context.mounted) {
-          showPremiumSnackBar(
+          showPremiumToast(
             context,
             message: 'Item deleted',
-            icon: AppIcons.success,
+            type: ToastType.success,
           );
           context.pop();
         }
       case Err<void, AppError>(:final error):
         if (context.mounted) {
-          showPremiumSnackBar(
+          showPremiumToast(
             context,
             message: error.message,
-            icon: AppIcons.error,
+            type: ToastType.error,
           );
         }
     }

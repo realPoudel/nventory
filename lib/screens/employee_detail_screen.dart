@@ -309,7 +309,7 @@ class _EmployeeDetailView extends ConsumerWidget {
                           style: AppTextStyles.labelMedium,
                         ),
                         Text(
-                          '\$${employee.hourlyRate.toStringAsFixed(2)}/hr',
+                          '₨${employee.hourlyRate.toStringAsFixed(2)}/hr',
                           style: AppTextStyles.body.copyWith(color: cs.primary),
                         ),
                       ],
@@ -424,19 +424,11 @@ class _EmployeeDetailView extends ConsumerWidget {
         ref.invalidate(filteredEmployeesProvider);
         ref.invalidate(workforceStatsProvider);
         if (context.mounted) {
-          showPremiumSnackBar(
-            context,
-            message: 'Employee deactivated',
-            icon: AppIcons.success,
-          );
+          showPremiumToast(context, message: 'Employee deactivated', type: ToastType.success);
         }
       case Err<Employee, AppError>(:final error):
         if (context.mounted) {
-          showPremiumSnackBar(
-            context,
-            message: error.message,
-            icon: AppIcons.error,
-          );
+          showPremiumToast(context, message: error.message, type: ToastType.error);
         }
     }
   }
@@ -466,20 +458,12 @@ class _EmployeeDetailView extends ConsumerWidget {
         ref.invalidate(filteredEmployeesProvider);
         ref.invalidate(workforceStatsProvider);
         if (context.mounted) {
-          showPremiumSnackBar(
-            context,
-            message: 'Employee deleted',
-            icon: AppIcons.success,
-          );
+          showPremiumToast(context, message: 'Employee deleted', type: ToastType.success);
           context.pop();
         }
       case Err<void, AppError>(:final error):
         if (context.mounted) {
-          showPremiumSnackBar(
-            context,
-            message: error.message,
-            icon: AppIcons.error,
-          );
+          showPremiumToast(context, message: error.message, type: ToastType.error);
         }
     }
   }

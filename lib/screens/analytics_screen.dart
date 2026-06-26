@@ -637,6 +637,7 @@ class _MovementTile extends StatelessWidget {
           _formatTime(movement.createdAt),
           style: AppTextStyles.caption.copyWith(color: cs.onSurfaceVariant),
         ),
+        onTap: () => context.push('/inventory/${movement.itemId}/history'),
       ),
     );
   }

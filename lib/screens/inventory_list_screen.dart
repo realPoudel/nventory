@@ -38,6 +38,11 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         title: const Text('Inventory'),
         actions: [
           IconButton(
+            icon: const Icon(AppIcons.import),
+            tooltip: 'Batch Operation',
+            onPressed: () => context.push('/inventory/batch'),
+          ),
+          IconButton(
             icon: const Icon(AppIcons.filter),
             onPressed: () => _showFilterSheet(context, categoriesAsync),
           ),
@@ -238,70 +243,105 @@ class _ItemListView extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: item.isOutOfStock
-                  ? cs.error.withValues(alpha: 0.1)
-                  : item.isLowStock
-                  ? AppColors.warning.withValues(alpha: 0.1)
-                  : cs.primaryContainer,
-              child: Text(
-                item.name.substring(0, 1).toUpperCase(),
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: item.isOutOfStock
-                      ? cs.error
-                      : item.isLowStock
-                      ? AppColors.warning
-                      : cs.onPrimaryContainer,
+        final statusColor = item.isOutOfStock
+            ? cs.error
+            : item.isLowStock
+                ? const Color(0xFFFF9800)
+                : cs.primary;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+            ),
+            child: InkWell(
+              onTap: () => context.push('/inventory/${item.id}'),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    // Status dot
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Item initial
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: statusColor.withValues(alpha: 0.1),
+                      child: Text(
+                        item.name.substring(0, 1).toUpperCase(),
+                        style: AppTextStyles.labelMedium.copyWith(color: statusColor),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Name + details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            style: AppTextStyles.body.copyWith(color: cs.onSurface),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${item.sku} · ${item.quantity} ${item.unit.abbreviation}',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Price
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '\$${item.sellingPrice.toStringAsFixed(2)}',
+                          style: AppTextStyles.labelMedium.copyWith(color: cs.primary),
+                        ),
+                        if (item.isOutOfStock)
+                          Text(
+                            'OUT OF STOCK',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: cs.error,
+                              fontSize: 9,
+                              letterSpacing: 0.5,
+                            ),
+                          )
+                        else if (item.isLowStock)
+                          Text(
+                            'LOW',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: const Color(0xFFFF9800),
+                              fontSize: 9,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(AppIcons.forward, size: 16, color: cs.outline),
+                  ],
                 ),
               ),
             ),
-            title: Text(
-              item.name,
-              style: AppTextStyles.body.copyWith(color: cs.onSurface),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'SKU: ${item.sku} | ${item.quantity} ${item.unit.abbreviation}',
-                  style: AppTextStyles.caption.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                if (item.isOutOfStock)
-                  Text(
-                    'OUT OF STOCK',
-                    style: AppTextStyles.labelSmall.copyWith(color: cs.error),
-                  )
-                else if (item.isLowStock)
-                  Text(
-                    'LOW STOCK',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.warning,
-                    ),
-                  ),
-              ],
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '\$${item.sellingPrice.toStringAsFixed(2)}',
-                  style: AppTextStyles.labelLarge.copyWith(color: cs.primary),
-                ),
-                Text(
-                  '\$${item.inventoryValue.toStringAsFixed(2)} value',
-                  style: AppTextStyles.caption.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            onTap: () => context.push('/inventory/${item.id}'),
           ),
         );
       },
@@ -341,46 +381,46 @@ class _ItemGridCard extends StatelessWidget {
   final Item item;
 
   /// Aspect ratio for grid card sizing.
-  static const double aspectRatio = 0.72;
+  static const double aspectRatio = 0.85;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final avatarBg = item.isOutOfStock
-        ? cs.error.withValues(alpha: 0.1)
-        : item.isLowStock
-            ? AppColors.warning.withValues(alpha: 0.1)
-            : cs.primaryContainer;
-    final avatarFg = item.isOutOfStock
+    final statusColor = item.isOutOfStock
         ? cs.error
         : item.isLowStock
-            ? AppColors.warning
-            : cs.onPrimaryContainer;
+            ? const Color(0xFFFF9800)
+            : cs.primary;
 
     return Card(
-      clipBehavior: Clip.antiAlias,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
       child: InkWell(
         onTap: () => context.push('/inventory/${item.id}'),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row: avatar + price
+              // Top: status dot + price
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: avatarBg,
-                    child: Text(
-                      item.name.substring(0, 1).toUpperCase(),
-                      style: AppTextStyles.labelLarge.copyWith(color: avatarFg),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
                     ),
                   ),
                   const Spacer(),
                   Text(
                     '\$${item.sellingPrice.toStringAsFixed(2)}',
-                    style: AppTextStyles.labelLarge.copyWith(color: cs.primary),
+                    style: AppTextStyles.labelMedium.copyWith(color: cs.primary),
                   ),
                 ],
               ),
@@ -396,18 +436,32 @@ class _ItemGridCard extends StatelessWidget {
               // SKU + quantity
               Text(
                 '${item.sku} · ${item.quantity} ${item.unit.abbreviation}',
-                style: AppTextStyles.caption.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: cs.onSurfaceVariant,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
-              // Status badge
+              const Spacer(),
+              // Status text
               if (item.isOutOfStock)
-                _StatusBadge(label: 'OUT OF STOCK', color: cs.error)
+                Text(
+                  'OUT OF STOCK',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: cs.error,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                )
               else if (item.isLowStock)
-                const _StatusBadge(label: 'LOW STOCK', color: AppColors.warning),
+                Text(
+                  'LOW STOCK',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: const Color(0xFFFF9800),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
             ],
           ),
         ),
@@ -416,25 +470,4 @@ class _ItemGridCard extends StatelessWidget {
   }
 }
 
-/// Small status badge used inside grid cards.
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.color});
 
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
-      ),
-    );
-  }
-}

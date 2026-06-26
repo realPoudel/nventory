@@ -44,6 +44,49 @@ class SettingsScreen extends ConsumerWidget {
                               .updateCompanyName(value);
                         },
                       ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: settings.panNumber,
+                        decoration: const InputDecoration(
+                          labelText: 'PAN Number',
+                          hintText: '9-digit Nepal PAN',
+                          prefixIcon: Icon(Icons.credit_card_outlined),
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          ref
+                              .read(appSettingsProvider.notifier)
+                              .updatePanNumber(value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: settings.registrationNumber,
+                        decoration: const InputDecoration(
+                          labelText: 'Registration Number',
+                          hintText: 'Company registration number',
+                          prefixIcon: Icon(Icons.description_outlined),
+                        ),
+                        onChanged: (value) {
+                          ref
+                              .read(appSettingsProvider.notifier)
+                              .updateRegistrationNumber(value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: settings.registrationLocation,
+                        decoration: const InputDecoration(
+                          labelText: 'Registration Location',
+                          hintText: 'e.g., Kathmandu, Nepal',
+                          prefixIcon: Icon(Icons.location_on_outlined),
+                        ),
+                        onChanged: (value) {
+                          ref
+                              .read(appSettingsProvider.notifier)
+                              .updateRegistrationLocation(value);
+                        },
+                      ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         initialValue: settings.currency,
@@ -52,6 +95,10 @@ class SettingsScreen extends ConsumerWidget {
                           prefixIcon: Icon(Icons.attach_money),
                         ),
                         items: const [
+                          DropdownMenuItem(
+                            value: 'NPR',
+                            child: Text('NPR (₨)'),
+                          ),
                           DropdownMenuItem(
                             value: 'USD',
                             child: Text('USD (\$)'),

@@ -355,20 +355,12 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
         ref.invalidate(filteredItemsProvider);
         ref.invalidate(dashboardStatsProvider);
         if (mounted) {
-          showPremiumSnackBar(
-            context,
-            message: isEditing ? 'Item updated' : 'Item created',
-            icon: AppIcons.success,
-          );
+          showPremiumToast(context, message: isEditing ? 'Item updated' : 'Item created', type: ToastType.success);
           context.pop();
         }
       case Err<Item, AppError>(:final error):
         if (mounted) {
-          showPremiumSnackBar(
-            context,
-            message: 'Error: ${error.message}',
-            icon: AppIcons.error,
-          );
+          showPremiumToast(context, message: 'Error: ${error.message}', type: ToastType.error);
         }
     }
   }

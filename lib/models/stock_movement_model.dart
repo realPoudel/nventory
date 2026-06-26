@@ -22,6 +22,8 @@ class StockMovement {
     this.previousQuantity = 0,
     this.newQuantity = 0,
     this.reason = '',
+    this.reference = '',
+    this.notes = '',
     required this.createdAt,
   });
 
@@ -33,6 +35,8 @@ class StockMovement {
   final int previousQuantity;
   final int newQuantity;
   final String reason;
+  final String reference; // e.g., PO number, batch ID, sale reference
+  final String notes; // additional notes
   final DateTime createdAt;
 
   Map<String, dynamic> toMap() => {
@@ -44,6 +48,8 @@ class StockMovement {
     'previousQuantity': previousQuantity,
     'newQuantity': newQuantity,
     'reason': reason,
+    'reference': reference,
+    'notes': notes,
     'createdAt': createdAt.toIso8601String(),
   };
 
@@ -59,6 +65,8 @@ class StockMovement {
     previousQuantity: map['previousQuantity'] as int? ?? 0,
     newQuantity: map['newQuantity'] as int? ?? 0,
     reason: map['reason'] as String? ?? '',
+    reference: map['reference'] as String? ?? '',
+    notes: map['notes'] as String? ?? '',
     createdAt: DateTime.parse(map['createdAt'] as String),
   );
 
@@ -70,6 +78,8 @@ class StockMovement {
     int previousQuantity = 0,
     int newQuantity = 0,
     String reason = '',
+    String reference = '',
+    String notes = '',
   }) {
     return StockMovement(
       id: HiveManager.generateId(),
@@ -80,6 +90,8 @@ class StockMovement {
       previousQuantity: previousQuantity,
       newQuantity: newQuantity,
       reason: reason,
+      reference: reference,
+      notes: notes,
       createdAt: DateTime.now(),
     );
   }

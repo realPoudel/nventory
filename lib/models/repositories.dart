@@ -111,6 +111,7 @@ class ItemRepository {
     String itemId,
     int adjustment, {
     String? reason,
+    String? reference,
   }) async {
     final item = await getById(itemId);
     if (item == null) {
@@ -142,8 +143,66 @@ class ItemRepository {
           previousQuantity: item.quantity,
           newQuantity: newQuantity,
           reason: reason ?? '',
+          reference: reference ?? '',
         ),
       );
+    }
+    return result;
+  }
+
+  /// Undo a stock movement by creating a reverse movement.
+  /// Returns the updated item, or an error if the movement doesn't exist.
+  Future<Result<Item, AppError>> undoMovement(String movementId) async {
+    final movementsBox = await HiveManager.getBox(HiveBoxes.stockMovements);
+    final data = movementsBox.safeGet<Map<String, dynamic>>(movementId);
+    if (data == null) {
+      return Err(NotFoundError('Stock movement', movementId));
+    }
+    final movement = StockMovement.fromMap(data);
+
+    // Calculate the reverse adjustment
+    int reverseAdjustment;
+    if (movement.type == MovementType.stockIn) {
+      reverseAdjustment = -movement.quantity;
+    } else if (movement.type == MovementType.stockOut) {
+      reverseAdjustment = movement.quantity;
+    } else {
+      reverseAdjustment = -movement.quantity;
+    }
+
+    final item = await getById(movement.itemId);
+    if (item == null) {
+      return Err(NotFoundError('Item', movement.itemId));
+    }
+
+    final newQuantity = item.quantity + reverseAdjustment;
+    if (newQuantity < 0) {
+      return Err(
+        InsufficientStockError(item.name, item.quantity, -reverseAdjustment),
+      );
+    }
+
+    final updated = item.copyWith(
+      quantity: newQuantity,
+      updatedAt: DateTime.now(),
+    );
+    final result = await update(updated);
+    if (result.isOk) {
+      // Log the undo as a new movement
+      await StockMovementRepository.instance.log(
+        StockMovement.create(
+          itemId: movement.itemId,
+          itemName: movement.itemName,
+          type: MovementType.adjustment,
+          quantity: movement.quantity,
+          previousQuantity: item.quantity,
+          newQuantity: newQuantity,
+          reason: 'Undo: ${movement.reason}',
+          reference: 'UNDO-$movementId',
+        ),
+      );
+      // Mark original movement as reversed (by deleting it)
+      await movementsBox.delete(movementId);
     }
     return result;
   }

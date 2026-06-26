@@ -73,7 +73,173 @@ class AppDialog extends StatelessWidget {
   }
 }
 
+/// Premium toast notification with slide-in animation and glass-morphism style.
+/// Replaces the old SnackBar-based toast for a cleaner, modern feel.
+void showPremiumToast(
+  BuildContext context, {
+  required String message,
+  IconData? icon,
+  Duration duration = const Duration(seconds: 3),
+  ToastType type = ToastType.neutral,
+}) {
+  final overlay = Overlay.of(context);
+  late OverlayEntry entry;
+
+  entry = OverlayEntry(
+    builder: (context) => _PremiumToastOverlay(
+      message: message,
+      icon: icon,
+      type: type,
+      duration: duration,
+      onDismiss: () => entry.remove(),
+    ),
+  );
+
+  overlay.insert(entry);
+  Future.delayed(duration, () {
+    if (entry.mounted) entry.remove();
+  });
+}
+
+/// Toast visual style variants.
+enum ToastType { neutral, success, warning, error }
+
+class _PremiumToastOverlay extends StatefulWidget {
+  const _PremiumToastOverlay({
+    required this.message,
+    this.icon,
+    required this.type,
+    required this.duration,
+    required this.onDismiss,
+  });
+
+  final String message;
+  final IconData? icon;
+  final ToastType type;
+  final Duration duration;
+  final VoidCallback onDismiss;
+
+  @override
+  State<_PremiumToastOverlay> createState() => _PremiumToastOverlayState();
+}
+
+class _PremiumToastOverlayState extends State<_PremiumToastOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Color _accentColor(ThemeData theme) {
+    return switch (widget.type) {
+      ToastType.success => const Color(0xFF4CAF50),
+      ToastType.warning => const Color(0xFFFF9800),
+      ToastType.error => theme.colorScheme.error,
+      ToastType.neutral => theme.colorScheme.primary,
+    };
+  }
+
+  IconData _defaultIcon() {
+    return switch (widget.type) {
+      ToastType.success => Icons.check_circle_outline,
+      ToastType.warning => Icons.warning_amber_outlined,
+      ToastType.error => Icons.error_outline,
+      ToastType.neutral => Icons.info_outline,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final accent = _accentColor(theme);
+    final icon = widget.icon ?? _defaultIcon();
+
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 16,
+      right: 16,
+      left: 16,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Material(
+            color: Colors.transparent,
+            child: GestureDetector(
+              onTap: widget.onDismiss,
+              onHorizontalDragEnd: (_) => widget.onDismiss(),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400),
+                decoration: BoxDecoration(
+                  color: cs.surface.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(icon, size: 18, color: accent),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          widget.message,
+                          style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Premium compact snackbar for theme-aware notifications.
+/// Kept for backward compatibility — prefer showPremiumToast().
 void showPremiumSnackBar(
   BuildContext context, {
   required String message,
@@ -240,58 +406,68 @@ class KpiCard extends StatelessWidget {
     final trendColor = trend == null
         ? cs.onSurfaceVariant
         : trend! >= 0
-            ? cs.primary
+            ? const Color(0xFF4CAF50)
             : cs.error;
 
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(Breakpoints.paddingMd),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 20, color: cs.primary),
-                    const SizedBox(width: 8),
+                    Icon(icon, size: 16, color: cs.primary),
+                    const SizedBox(width: 6),
                   ],
                   Expanded(
                     child: Text(
                       title,
-                      style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: cs.onSurfaceVariant,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
                 value,
-                style: AppTextStyles.h3.copyWith(color: cs.onSurface),
+                style: AppTextStyles.h2.copyWith(color: cs.onSurface),
               ),
               if (subtitle != null || trend != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     if (trend != null) ...[
                       Icon(
                         trend! >= 0 ? Icons.trending_up : Icons.trending_down,
-                        size: 14,
+                        size: 12,
                         color: trendColor,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),
                       Text(
                         '${trend!.abs().toStringAsFixed(1)}%',
-                        style: AppTextStyles.caption.copyWith(color: trendColor),
+                        style: AppTextStyles.labelSmall.copyWith(color: trendColor),
                       ),
                     ],
                     if (subtitle != null) ...[
                       if (trend != null) const SizedBox(width: 8),
                       Text(
                         subtitle!,
-                        style: AppTextStyles.caption.copyWith(color: cs.onSurfaceVariant),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
