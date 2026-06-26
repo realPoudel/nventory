@@ -16,8 +16,6 @@ dependencies:
   hive_flutter: ^1.1.0
   # Routing
   go_router: ^14.8.1
-  # Responsive layout
-  flutter_adaptive_scaffold: ^0.3.2
   # Icons
   cupertino_icons: ^1.0.8
   # UUID generation

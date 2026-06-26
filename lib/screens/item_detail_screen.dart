@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/errors.dart';
 import '../core/result.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/item_model.dart';
 import '../models/category_model.dart';
@@ -36,7 +37,30 @@ class ItemDetailScreen extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, stack) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
-        body: Center(child: Text('Error: $error')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  AppIcons.error,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                const Text('Failed to load item', style: AppTextStyles.h4),
+                const SizedBox(height: 8),
+                Text(
+                  '$error',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -146,7 +170,7 @@ class _ItemDetailView extends ConsumerWidget {
           _StatusBanner(
             message:
                 'LOW STOCK \u2014 ${item.quantity} ${item.unit.abbreviation} remaining',
-            color: Colors.orange,
+            color: AppColors.warning,
             icon: AppIcons.warning,
           ),
         const SizedBox(height: 16),
@@ -193,7 +217,7 @@ class _ItemDetailView extends ConsumerWidget {
           _StatusBanner(
             message:
                 'LOW STOCK \u2014 ${item.quantity} ${item.unit.abbreviation} remaining',
-            color: Colors.orange,
+            color: AppColors.warning,
             icon: AppIcons.warning,
           ),
         const SizedBox(height: 16),
@@ -242,7 +266,7 @@ class _ItemDetailView extends ConsumerWidget {
           _StatusBanner(
             message:
                 'LOW STOCK \u2014 ${item.quantity} ${item.unit.abbreviation} remaining',
-            color: Colors.orange,
+            color: AppColors.warning,
             icon: AppIcons.warning,
           ),
         const SizedBox(height: 16),
@@ -317,8 +341,8 @@ class _ItemDetailView extends ConsumerWidget {
                       color: item.isOutOfStock
                           ? cs.error
                           : item.isLowStock
-                              ? Colors.orange
-                              : cs.primary,
+                          ? AppColors.warning
+                          : cs.primary,
                     ),
                   ),
                 ],

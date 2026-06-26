@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../providers.dart';
 import '../responsive_breakpoints.dart';
@@ -124,12 +125,12 @@ class DashboardScreen extends ConsumerWidget {
                         leading: CircleAvatar(
                           backgroundColor: item.isOutOfStock
                               ? cs.error.withValues(alpha: 0.1)
-                              : Colors.orange.withValues(alpha: 0.1),
+                              : AppColors.warning.withValues(alpha: 0.1),
                           child: Icon(
                             item.isOutOfStock
                                 ? AppIcons.error
                                 : AppIcons.warning,
-                            color: item.isOutOfStock ? cs.error : Colors.orange,
+                            color: item.isOutOfStock ? cs.error : AppColors.warning,
                           ),
                         ),
                         title: Text(item.name, style: AppTextStyles.body),
@@ -140,7 +141,7 @@ class DashboardScreen extends ConsumerWidget {
                         trailing: Text(
                           '${item.quantity} left',
                           style: AppTextStyles.labelMedium.copyWith(
-                            color: item.isOutOfStock ? cs.error : Colors.orange,
+                            color: item.isOutOfStock ? cs.error : AppColors.warning,
                           ),
                         ),
                         onTap: () => context.push('/inventory/${item.id}'),

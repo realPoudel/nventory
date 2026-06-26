@@ -69,7 +69,7 @@ class AppScaffold extends ConsumerWidget {
     // Mobile: Bottom navigation bar
     if (context.isMobile) {
       return Scaffold(
-        body: child,
+        body: SafeArea(child: child),
         bottomNavigationBar: NavigationBar(
           selectedIndex: currentIndex,
           onDestinationSelected: (index) {

@@ -1,0 +1,187 @@
+import 'package:flutter/material.dart';
+import 'app_colors.dart';
+import 'typography.dart';
+
+/// Seed-based Material 3 theme generator for nVentory.
+///
+/// Uses Flutter's `ColorScheme.fromSeed()` to algorithmically generate a full
+/// tonal palette from the Olive Drab seed (#6B8E23). This is the approach
+/// recommended by the MD3 Color Roles Guide — it guarantees proper contrast
+/// ratios (4.5:1 minimum) and consistent light/dark theme transitions.
+///
+/// Usage:
+///   ThemeData light = OliveTheme.light;
+///   ThemeData dark  = OliveTheme.dark;
+///
+/// The existing `AppTheme.light` / `AppTheme.dark` remain the primary themes
+/// (they use hand-crafted values for maximum brand control). Use
+/// `OliveTheme.fromSeed` when you want algorithmic consistency or plan to
+/// swap seed colors dynamically.
+class OliveTheme {
+  OliveTheme._();
+
+  /// Pure Olive Green root seed token.
+  static const Color oliveSeed = AppColors.oliveSeed; // #6B8E23
+
+  /// Generates complete Light Material 3 theme from seed.
+  static ThemeData get light {
+    return _buildTheme(
+      ColorScheme.fromSeed(
+        seedColor: oliveSeed,
+        brightness: Brightness.light,
+      ),
+    );
+  }
+
+  /// Generates complete Dark Material 3 theme from seed.
+  static ThemeData get dark {
+    return _buildTheme(
+      ColorScheme.fromSeed(
+        seedColor: oliveSeed,
+        brightness: Brightness.dark,
+      ),
+    );
+  }
+
+  /// Builds a full ThemeData from a ColorScheme.
+  /// Applies nVentory's component customizations on top of the seed palette.
+  static ThemeData _buildTheme(ColorScheme cs) {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: cs,
+      fontFamily: 'OpenSans',
+      // App bar
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
+        surfaceTintColor: cs.surfaceTint,
+        titleTextStyle: AppTextStyles.h4.copyWith(color: cs.onSurface),
+      ),
+      // Cards
+      cardTheme: CardThemeData(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: cs.surfaceContainerHighest,
+        surfaceTintColor: cs.surfaceTint,
+      ),
+      // FAB
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      // Input decoration
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: cs.surfaceContainerHighest,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.error),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      // Elevated buttons
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
+          elevation: 1,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+      // Text buttons
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: cs.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+      // Outlined buttons
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: cs.primary,
+          side: BorderSide(color: cs.outline),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+      // Chips
+      chipTheme: ChipThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        selectedColor: cs.primaryContainer,
+        labelStyle: AppTextStyles.labelMedium,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: BorderSide(color: cs.outline),
+      ),
+      // Dialogs
+      dialogTheme: DialogThemeData(
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titleTextStyle: AppTextStyles.h4.copyWith(color: cs.onSurface),
+        contentTextStyle: AppTextStyles.body.copyWith(color: cs.onSurfaceVariant),
+      ),
+      // Navigation bar (mobile)
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        indicatorColor: cs.primaryContainer,
+        labelTextStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTextStyles.labelMedium.copyWith(color: cs.onSurface);
+          }
+          return AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant);
+        }),
+      ),
+      // Navigation rail (tablet/desktop)
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: cs.surface,
+        indicatorColor: cs.primaryContainer,
+        selectedIconTheme: IconThemeData(color: cs.onPrimaryContainer),
+        unselectedIconTheme: IconThemeData(color: cs.onSurfaceVariant),
+        selectedLabelTextStyle: AppTextStyles.labelMedium.copyWith(color: cs.onSurface),
+        unselectedLabelTextStyle: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant),
+      ),
+      // Snack bar
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: cs.inverseSurface,
+        contentTextStyle: AppTextStyles.bodySmall.copyWith(color: cs.onInverseSurface),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      // Divider
+      dividerTheme: DividerThemeData(
+        color: cs.outlineVariant,
+        thickness: 1,
+      ),
+      // List tile
+      listTileTheme: ListTileThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        titleTextStyle: AppTextStyles.body.copyWith(color: cs.onSurface),
+        subtitleTextStyle: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+      ),
+    );
+  }
+}

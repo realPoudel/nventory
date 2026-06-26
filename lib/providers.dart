@@ -367,3 +367,52 @@ final recentMovementsProvider = FutureProvider<List<StockMovement>>((ref) async 
 final movementSummaryProvider = FutureProvider<MovementSummary>((ref) async {
   return StockMovementRepository.instance.getSummary();
 });
+
+/// Filtered movements provider for Reports screen.
+/// Fetches movements by optional date range, then filters by type and search query.
+final filteredMovementsProvider =
+    FutureProvider.family<List<StockMovement>, MovementFilter>((ref, filter) async {
+  var movements = <StockMovement>[];
+  if (filter.dateRange != null) {
+    movements = await StockMovementRepository.instance.getByDateRange(
+      filter.dateRange!.start,
+      filter.dateRange!.end,
+    );
+  } else {
+    movements = await StockMovementRepository.instance.getRecent(100);
+  }
+  if (filter.movementType != null) {
+    movements = movements.where((m) => m.type == filter.movementType).toList();
+  }
+  if (filter.searchQuery.isNotEmpty) {
+    final q = filter.searchQuery.toLowerCase();
+    movements = movements
+        .where((m) => m.itemName.toLowerCase().contains(q))
+        .toList();
+  }
+  return movements;
+});
+
+@immutable
+class MovementFilter {
+  const MovementFilter({
+    this.dateRange,
+    this.movementType,
+    this.searchQuery = '',
+  });
+
+  final DateTimeRange? dateRange;
+  final MovementType? movementType;
+  final String searchQuery;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MovementFilter &&
+          dateRange == other.dateRange &&
+          movementType == other.movementType &&
+          searchQuery == other.searchQuery;
+
+  @override
+  int get hashCode => Object.hash(dateRange, movementType, searchQuery);
+}

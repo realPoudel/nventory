@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/stock_movement_model.dart';
-import '../models/stock_movement_repository.dart';
 import '../providers.dart';
 import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
@@ -240,7 +240,7 @@ class _FilterBar extends StatelessWidget {
   }
 }
 
-class _MovementReport extends StatelessWidget {
+class _MovementReport extends ConsumerWidget {
   const _MovementReport({
     required this.dateRange,
     required this.movementType,
@@ -252,19 +252,16 @@ class _MovementReport extends StatelessWidget {
   final String searchQuery;
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<StockMovement>>(
-      future: _fetchMovements(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-        final movements = snapshot.data!;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = MovementFilter(
+      dateRange: dateRange,
+      movementType: movementType,
+      searchQuery: searchQuery,
+    );
+    final movementsAsync = ref.watch(filteredMovementsProvider(filter));
+
+    return movementsAsync.when(
+      data: (movements) {
         if (movements.isEmpty) {
           return Card(
             child: Padding(
@@ -304,29 +301,14 @@ class _MovementReport extends StatelessWidget {
           ),
         );
       },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
     );
-  }
-
-  Future<List<StockMovement>> _fetchMovements() async {
-    var movements = <StockMovement>[];
-    if (dateRange != null) {
-      movements = await StockMovementRepository.instance.getByDateRange(
-        dateRange!.start,
-        dateRange!.end,
-      );
-    } else {
-      movements = await StockMovementRepository.instance.getRecent(100);
-    }
-    if (movementType != null) {
-      movements = movements.where((m) => m.type == movementType).toList();
-    }
-    if (searchQuery.isNotEmpty) {
-      final q = searchQuery.toLowerCase();
-      movements = movements
-          .where((m) => m.itemName.toLowerCase().contains(q))
-          .toList();
-    }
-    return movements;
   }
 }
 
@@ -366,7 +348,7 @@ class _LowStockReport extends ConsumerWidget {
               return ListTile(
                 leading: Icon(
                   item.isOutOfStock ? AppIcons.error : AppIcons.warning,
-                  color: item.isOutOfStock ? cs.error : Colors.orange,
+                  color: item.isOutOfStock ? cs.error : AppColors.warning,
                 ),
                 title: Text(item.name, style: AppTextStyles.body),
                 subtitle: Text(
@@ -376,7 +358,7 @@ class _LowStockReport extends ConsumerWidget {
                 trailing: Text(
                   '${item.quantity} / ${item.lowStockThreshold}',
                   style: AppTextStyles.labelMedium.copyWith(
-                    color: item.isOutOfStock ? cs.error : Colors.orange,
+                    color: item.isOutOfStock ? cs.error : AppColors.warning,
                   ),
                 ),
               );

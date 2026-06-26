@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/item_model.dart';
 import '../models/category_model.dart';
@@ -558,7 +559,7 @@ class _MovementSummaryCard extends ConsumerWidget {
                     _MovementStat(
                       label: 'Adjustments',
                       value: summary.adjustments.toString(),
-                      color: Colors.orange,
+                      color: AppColors.warning,
                       icon: Icons.tune,
                     ),
                   ],
@@ -686,7 +687,7 @@ class _WorkforceSummary extends StatelessWidget {
                   child: _WorkforceStat(
                     label: 'Pending Tasks',
                     value: stats.pendingTasks.toString(),
-                    color: Colors.orange,
+                    color: AppColors.warning,
                     icon: Icons.assignment_outlined,
                   ),
                 ),

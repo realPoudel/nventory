@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/errors.dart';
 import '../core/result.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/employee_model.dart';
 import '../models/task_model.dart';
@@ -36,7 +37,30 @@ class EmployeeDetailScreen extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, stack) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
-        body: Center(child: Text('Error: $error')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  AppIcons.error,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                const Text('Failed to load employee', style: AppTextStyles.h4),
+                const SizedBox(height: 8),
+                Text(
+                  '$error',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -517,14 +541,14 @@ class _TaskCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final priorityColor = switch (task.priority) {
       TaskPriority.urgent => cs.error,
-      TaskPriority.high => Colors.orange,
+      TaskPriority.high => AppColors.warning,
       TaskPriority.medium => cs.primary,
       TaskPriority.low => cs.outline,
     };
     final statusColor = switch (task.status) {
       TaskStatus.completed => cs.primary,
-      TaskStatus.inProgress => Colors.blue,
-      TaskStatus.pending => Colors.orange,
+      TaskStatus.inProgress => cs.tertiary,
+      TaskStatus.pending => AppColors.warning,
       TaskStatus.cancelled => cs.outline,
     };
 

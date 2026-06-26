@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/employee_model.dart';
 import '../providers.dart';
@@ -82,7 +83,7 @@ class _EmployeesListScreenState extends ConsumerState<EmployeesListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(AppIcons.error, size: 48, color: Colors.red),
+                    Icon(AppIcons.error, size: 48, color: AppColors.error),
                     SizedBox(height: 16),
                     Text('Error loading employees', style: AppTextStyles.body),
                   ],

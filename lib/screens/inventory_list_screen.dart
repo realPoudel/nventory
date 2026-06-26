@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../design/app_colors.dart';
 import '../design/typography.dart';
 import '../models/item_model.dart';
 import '../models/category_model.dart';
@@ -92,7 +93,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(AppIcons.error, size: 48, color: Colors.red),
+                    const Icon(AppIcons.error, size: 48, color: AppColors.error),
                     const SizedBox(height: 16),
                     const Text(
                       'Error loading items',
@@ -244,7 +245,7 @@ class _ItemListView extends StatelessWidget {
               backgroundColor: item.isOutOfStock
                   ? cs.error.withValues(alpha: 0.1)
                   : item.isLowStock
-                  ? Colors.orange.withValues(alpha: 0.1)
+                  ? AppColors.warning.withValues(alpha: 0.1)
                   : cs.primaryContainer,
               child: Text(
                 item.name.substring(0, 1).toUpperCase(),
@@ -252,7 +253,7 @@ class _ItemListView extends StatelessWidget {
                   color: item.isOutOfStock
                       ? cs.error
                       : item.isLowStock
-                      ? Colors.orange
+                      ? AppColors.warning
                       : cs.onPrimaryContainer,
                 ),
               ),
@@ -279,7 +280,7 @@ class _ItemListView extends StatelessWidget {
                   Text(
                     'LOW STOCK',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: Colors.orange,
+                      color: AppColors.warning,
                     ),
                   ),
               ],
@@ -348,12 +349,12 @@ class _ItemGridCard extends StatelessWidget {
     final avatarBg = item.isOutOfStock
         ? cs.error.withValues(alpha: 0.1)
         : item.isLowStock
-            ? Colors.orange.withValues(alpha: 0.1)
+            ? AppColors.warning.withValues(alpha: 0.1)
             : cs.primaryContainer;
     final avatarFg = item.isOutOfStock
         ? cs.error
         : item.isLowStock
-            ? Colors.orange
+            ? AppColors.warning
             : cs.onPrimaryContainer;
 
     return Card(
@@ -406,7 +407,7 @@ class _ItemGridCard extends StatelessWidget {
               if (item.isOutOfStock)
                 _StatusBadge(label: 'OUT OF STOCK', color: cs.error)
               else if (item.isLowStock)
-                const _StatusBadge(label: 'LOW STOCK', color: Colors.orange),
+                const _StatusBadge(label: 'LOW STOCK', color: AppColors.warning),
             ],
           ),
         ),

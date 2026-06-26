@@ -12,6 +12,9 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: cs,
       fontFamily: 'OpenSans',
+      // Typography — wires AppTextStyles into ThemeData so all widgets inherit
+      textTheme: _buildTextTheme(cs, Brightness.light),
+      primaryTextTheme: _buildTextTheme(cs, Brightness.light),
       // App bar
       appBarTheme: AppBarTheme(
         elevation: 0,
@@ -136,12 +139,85 @@ class AppTheme {
         color: cs.outlineVariant,
         thickness: 1,
       ),
+      // Progress indicator (circular + linear)
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: cs.primary,
+        circularTrackColor: cs.surfaceContainerHighest,
+        linearTrackColor: cs.surfaceContainerHighest,
+        linearMinHeight: 4,
+      ),
+      // Slider
+      sliderTheme: SliderThemeData(
+        activeTrackColor: cs.primary,
+        inactiveTrackColor: cs.surfaceContainerHighest,
+        thumbColor: cs.primary,
+        overlayColor: cs.primary.withValues(alpha: 0.12),
+        valueIndicatorColor: cs.primary,
+        valueIndicatorTextStyle:
+            AppTextStyles.labelSmall.copyWith(color: cs.onPrimary),
+        trackHeight: 4,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+      ),
+      // Switch
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return cs.onPrimary;
+          }
+          return cs.outline;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return cs.primary;
+          }
+          return cs.surfaceContainerHighest;
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return cs.primary;
+          }
+          return cs.outline;
+        }),
+      ),
+      // Tooltip
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: cs.inverseSurface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle:
+            AppTextStyles.bodySmall.copyWith(color: cs.onInverseSurface),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        waitDuration: const Duration(milliseconds: 500),
+      ),
+      // Drawer
+      drawerTheme: DrawerThemeData(
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.horizontal(right: Radius.circular(16)),
+        ),
+      ),
+      // Bottom sheet
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        modalBarrierColor: cs.scrim.withValues(alpha: 0.5),
+        showDragHandle: true,
+        dragHandleColor: cs.onSurfaceVariant,
+        dragHandleSize: const Size(32, 4),
+      ),
       // List tile
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         titleTextStyle: AppTextStyles.body.copyWith(color: cs.onSurface),
-        subtitleTextStyle: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+        subtitleTextStyle:
+            AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
       ),
     );
   }
@@ -153,6 +229,9 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: cs,
       fontFamily: 'OpenSans',
+      // Typography — wires AppTextStyles into ThemeData so all widgets inherit
+      textTheme: _buildTextTheme(cs, Brightness.dark),
+      primaryTextTheme: _buildTextTheme(cs, Brightness.dark),
       // App bar
       appBarTheme: AppBarTheme(
         elevation: 0,
@@ -277,13 +356,116 @@ class AppTheme {
         color: cs.outlineVariant,
         thickness: 1,
       ),
+      // Progress indicator (circular + linear)
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: cs.primary,
+        circularTrackColor: cs.surfaceContainerHighest,
+        linearTrackColor: cs.surfaceContainerHighest,
+        linearMinHeight: 4,
+      ),
+      // Slider
+      sliderTheme: SliderThemeData(
+        activeTrackColor: cs.primary,
+        inactiveTrackColor: cs.surfaceContainerHighest,
+        thumbColor: cs.primary,
+        overlayColor: cs.primary.withValues(alpha: 0.12),
+        valueIndicatorColor: cs.primary,
+        valueIndicatorTextStyle:
+            AppTextStyles.labelSmall.copyWith(color: cs.onPrimary),
+        trackHeight: 4,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+      ),
+      // Switch
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return cs.onPrimary;
+          }
+          return cs.outline;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return cs.primary;
+          }
+          return cs.surfaceContainerHighest;
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return cs.primary;
+          }
+          return cs.outline;
+        }),
+      ),
+      // Tooltip
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: cs.inverseSurface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle:
+            AppTextStyles.bodySmall.copyWith(color: cs.onInverseSurface),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        waitDuration: const Duration(milliseconds: 500),
+      ),
+      // Drawer
+      drawerTheme: DrawerThemeData(
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.horizontal(right: Radius.circular(16)),
+        ),
+      ),
+      // Bottom sheet
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cs.surface,
+        surfaceTintColor: cs.surfaceTint,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        modalBarrierColor: cs.scrim.withValues(alpha: 0.5),
+        showDragHandle: true,
+        dragHandleColor: cs.onSurfaceVariant,
+        dragHandleSize: const Size(32, 4),
+      ),
       // List tile
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         titleTextStyle: AppTextStyles.body.copyWith(color: cs.onSurface),
-        subtitleTextStyle: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+        subtitleTextStyle:
+            AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
       ),
+    );
+  }
+
+  /// Builds a Material 3 TextTheme from AppTextStyles.
+  /// Maps our custom styles to the 15 MD3 text roles so that any widget
+  /// using `Theme.of(context).textTheme` inherits the Olive Green typography.
+  static TextTheme _buildTextTheme(ColorScheme cs, Brightness brightness) {
+    final Color onSurface = cs.onSurface;
+    final Color onSurfaceVariant = cs.onSurfaceVariant;
+    return TextTheme(
+      // Display
+      displayLarge: AppTextStyles.h1.copyWith(color: onSurface),
+      displayMedium: AppTextStyles.h2.copyWith(color: onSurface),
+      displaySmall: AppTextStyles.h3.copyWith(color: onSurface),
+      // Headline
+      headlineLarge: AppTextStyles.h2.copyWith(color: onSurface),
+      headlineMedium: AppTextStyles.h3.copyWith(color: onSurface),
+      headlineSmall: AppTextStyles.h4.copyWith(color: onSurface),
+      // Title
+      titleLarge: AppTextStyles.h4.copyWith(color: onSurface),
+      titleMedium: AppTextStyles.bodyLarge.copyWith(color: onSurface, fontWeight: FontWeight.w600),
+      titleSmall: AppTextStyles.body.copyWith(color: onSurface, fontWeight: FontWeight.w500),
+      // Body
+      bodyLarge: AppTextStyles.bodyLarge.copyWith(color: onSurface),
+      bodyMedium: AppTextStyles.body.copyWith(color: onSurface),
+      bodySmall: AppTextStyles.bodySmall.copyWith(color: onSurfaceVariant),
+      // Label
+      labelLarge: AppTextStyles.button.copyWith(color: onSurface),
+      labelMedium: AppTextStyles.labelMedium.copyWith(color: onSurfaceVariant),
+      labelSmall: AppTextStyles.labelSmall.copyWith(color: onSurfaceVariant),
     );
   }
 }
