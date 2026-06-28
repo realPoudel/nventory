@@ -11,6 +11,7 @@ import '../providers.dart';
 import '../routing/app_router.dart';
 import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
+import '../ui/hero_section.dart';
 
 /// Employee detail screen with profile, contact, tasks, and shift info.
 class EmployeeDetailScreen extends ConsumerWidget {
@@ -126,10 +127,22 @@ class _EmployeeDetailView extends ConsumerWidget {
         maxWidth: 900,
         child: SingleChildScrollView(
           padding: EdgeInsets.all(context.responsivePadding),
-          child: ResponsiveBuilder(
-            mobile: (_) => _buildMobileLayout(context, cs),
-            tablet: (_) => _buildWideLayout(context, cs, 280),
-            desktop: (_) => _buildWideLayout(context, cs, 320),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              HeroSection(
+                title: employee.fullName,
+                subtitle:
+                    '${employee.role.label} · ${employee.department.label}',
+                showLogo: true,
+              ),
+              const SizedBox(height: 12),
+              ResponsiveBuilder(
+                mobile: (_) => _buildMobileLayout(context, cs),
+                tablet: (_) => _buildWideLayout(context, cs, 280),
+                desktop: (_) => _buildWideLayout(context, cs, 320),
+              ),
+            ],
           ),
         ),
       ),
@@ -140,8 +153,6 @@ class _EmployeeDetailView extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildProfileHeader(cs),
-        const SizedBox(height: 12),
         _buildContactCard(cs),
         const SizedBox(height: 12),
         _buildEmploymentCard(cs),
@@ -160,8 +171,6 @@ class _EmployeeDetailView extends ConsumerWidget {
   ) {
     return _TwoColumnDetail(
       left: [
-        _buildProfileHeader(cs),
-        const SizedBox(height: 12),
         _buildContactCard(cs),
         const SizedBox(height: 12),
         _buildEmploymentCard(cs),
@@ -176,53 +185,6 @@ class _EmployeeDetailView extends ConsumerWidget {
   }
 
   // === Shared card builders ===
-
-  Widget _buildProfileHeader(ColorScheme cs) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 32,
-              backgroundColor: Color(
-                employee.avatarColor,
-              ).withValues(alpha: 0.2),
-              child: Text(
-                employee.initials,
-                style: AppTextStyles.h3.copyWith(
-                  color: Color(employee.avatarColor),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    employee.fullName,
-                    style: AppTextStyles.h4.copyWith(color: cs.onSurface),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    employee.role.label,
-                    style: AppTextStyles.body.copyWith(color: cs.primary),
-                  ),
-                  Text(
-                    employee.department.label,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildContactCard(ColorScheme cs) {
     return Card(
@@ -424,11 +386,19 @@ class _EmployeeDetailView extends ConsumerWidget {
         ref.invalidate(filteredEmployeesProvider);
         ref.invalidate(workforceStatsProvider);
         if (context.mounted) {
-          showPremiumToast(context, message: 'Employee deactivated', type: ToastType.success);
+          showPremiumToast(
+            context,
+            message: 'Employee deactivated',
+            type: ToastType.success,
+          );
         }
       case Err<Employee, AppError>(:final error):
         if (context.mounted) {
-          showPremiumToast(context, message: error.message, type: ToastType.error);
+          showPremiumToast(
+            context,
+            message: error.message,
+            type: ToastType.error,
+          );
         }
     }
   }
@@ -458,12 +428,20 @@ class _EmployeeDetailView extends ConsumerWidget {
         ref.invalidate(filteredEmployeesProvider);
         ref.invalidate(workforceStatsProvider);
         if (context.mounted) {
-          showPremiumToast(context, message: 'Employee deleted', type: ToastType.success);
+          showPremiumToast(
+            context,
+            message: 'Employee deleted',
+            type: ToastType.success,
+          );
           context.pop();
         }
       case Err<void, AppError>(:final error):
         if (context.mounted) {
-          showPremiumToast(context, message: error.message, type: ToastType.error);
+          showPremiumToast(
+            context,
+            message: error.message,
+            type: ToastType.error,
+          );
         }
     }
   }

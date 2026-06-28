@@ -64,7 +64,9 @@ class AlertLogRepository {
   Future<void> acknowledge(String alertId) async {
     final box = await _box;
     final data = box.safeGet<Map<String, dynamic>>(alertId);
-    if (data == null) return;
+    if (data == null) {
+      return;
+    }
 
     final alert = AlertLog.fromMap(data).acknowledge();
     await box.put(alertId, alert.toMap());

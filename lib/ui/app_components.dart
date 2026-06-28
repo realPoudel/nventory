@@ -97,7 +97,9 @@ void showPremiumToast(
 
   overlay.insert(entry);
   Future.delayed(duration, () {
-    if (entry.mounted) entry.remove();
+    if (entry.mounted) {
+      entry.remove();
+    }
   });
 }
 
@@ -238,44 +240,6 @@ class _PremiumToastOverlayState extends State<_PremiumToastOverlay>
   }
 }
 
-/// Premium compact snackbar for theme-aware notifications.
-/// Kept for backward compatibility — prefer showPremiumToast().
-void showPremiumSnackBar(
-  BuildContext context, {
-  required String message,
-  IconData? icon,
-  SnackBarAction? action,
-  Duration duration = const Duration(seconds: 3),
-}) {
-  final cs = Theme.of(context).colorScheme;
-  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 18, color: cs.onInverseSurface),
-            const SizedBox(width: 8),
-          ],
-          Expanded(
-            child: Text(
-              message,
-              style: AppTextStyles.bodySmall.copyWith(color: cs.onInverseSurface),
-            ),
-          ),
-        ],
-      ),
-      action: action,
-      duration: duration,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: context.isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.all(24),
-    ),
-  );
-}
-
 /// Empty state widget with illustration and call-to-action.
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -297,31 +261,31 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(Breakpoints.paddingXl),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 72, color: cs.outline),
-            const SizedBox(height: 16),
+            Icon(icon, size: 48, color: cs.outline),
+            const SizedBox(height: 12),
             Text(
               title,
               style: AppTextStyles.h4.copyWith(color: cs.onSurface),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 subtitle!,
-                style: AppTextStyles.body.copyWith(color: cs.onSurfaceVariant),
+                style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: onAction,
-                icon: const Icon(AppIcons.add),
+                icon: const Icon(AppIcons.add, size: 18),
                 label: Text(actionLabel!),
               ),
             ],

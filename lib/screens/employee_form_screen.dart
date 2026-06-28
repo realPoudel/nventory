@@ -7,10 +7,9 @@ import '../core/validators.dart';
 import '../design/typography.dart';
 import '../models/employee_model.dart';
 import '../providers.dart';
-import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
 
-/// Add/Edit employee form screen.
+/// Add/edit employee form — Dialog-style centered layout.
 class EmployeeFormScreen extends ConsumerStatefulWidget {
   const EmployeeFormScreen({super.key, this.employee});
 
@@ -42,9 +41,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
     _lastNameController = TextEditingController(text: emp?.lastName ?? '');
     _emailController = TextEditingController(text: emp?.email ?? '');
     _phoneController = TextEditingController(text: emp?.phone ?? '');
-    _hourlyRateController = TextEditingController(
-      text: emp?.hourlyRate.toStringAsFixed(2) ?? '0.00',
-    );
+    _hourlyRateController = TextEditingController(text: emp?.hourlyRate.toStringAsFixed(2) ?? '0.00');
     _selectedRole = emp?.role ?? EmployeeRole.staff;
     _selectedDepartment = emp?.department ?? Department.warehouse;
   }
@@ -62,157 +59,210 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Employee' : 'Add Employee'),
-        actions: [
-          TextButton(
-            onPressed: _isSubmitting ? null : _saveEmployee,
-            child: Text(
-              'Save',
-              style: AppTextStyles.button.copyWith(
-                color: _isSubmitting
-                    ? Theme.of(context).colorScheme.outline
-                    : Theme.of(context).colorScheme.primary,
-              ),
+      backgroundColor: Colors.black.withValues(alpha: 0.3),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 580),
+          child: Material(
+            elevation: 24,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildFields(),
+                          const SizedBox(height: 24),
+                          _buildActions(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              isEditing ? 'Edit Employee' : 'Add Employee',
+              style: AppTextStyles.h4.copyWith(color: cs.onSurface),
+            ),
+          ),
+          IconButton(
+            icon: Icon(AppIcons.close, size: 18, color: cs.onSurfaceVariant),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
-      body: ConstrainedContent(
-        maxWidth: 800,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(context.responsivePadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SectionHeader(title: 'Personal Information'),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _firstNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'First Name *',
-                      ),
-                      validator: (value) {
-                        final result = Validators.required(value, 'First name');
-                        return result.error?.message;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lastNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Last Name *',
-                      ),
-                      validator: (value) {
-                        final result = Validators.required(value, 'Last name');
-                        return result.error?.message;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
+    );
+  }
+
+  Widget _buildFields() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _firstNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Email *',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  labelText: 'First Name',
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
-                keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  final result = Validators.email(value, 'Email');
+                  final result = Validators.required(value, 'First name');
                   return result.error?.message;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextFormField(
+                controller: _lastNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                  hintText: 'e.g., +1 555-0123',
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Job Details'),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<EmployeeRole>(
-                      initialValue: _selectedRole,
-                      decoration: const InputDecoration(
-                        labelText: 'Role *',
-                        prefixIcon: Icon(Icons.badge_outlined),
-                      ),
-                      items: EmployeeRole.values.map((role) {
-                        return DropdownMenuItem<EmployeeRole>(
-                          value: role,
-                          child: Text(role.label),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedRole = value);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<Department>(
-                      initialValue: _selectedDepartment,
-                      decoration: const InputDecoration(
-                        labelText: 'Department *',
-                        prefixIcon: Icon(Icons.business_outlined),
-                      ),
-                      items: Department.values.map((dept) {
-                        return DropdownMenuItem<Department>(
-                          value: dept,
-                          child: Text(dept.label),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedDepartment = value);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-              controller: _hourlyRateController,
-              decoration: const InputDecoration(
-                labelText: 'Hourly Rate',
-                prefixText: '₨ ',
-              ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+                  labelText: 'Last Name',
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
                 validator: (value) {
-                  final result = Validators.nonNegative(
-                    num.tryParse(value ?? ''),
-                    'Hourly rate',
-                  );
+                  final result = Validators.required(value, 'Last name');
                   return result.error?.message;
                 },
               ),
-              const SizedBox(height: 32),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _emailController,
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            prefixIcon: Icon(Icons.email_outlined, size: 18),
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            final result = Validators.email(value, 'Email');
+            return result.error?.message;
+          },
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _phoneController,
+          decoration: const InputDecoration(
+            labelText: 'Phone',
+            prefixIcon: Icon(Icons.phone_outlined, size: 18),
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            hintText: '+1 555-0123',
+          ),
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<EmployeeRole>(
+                initialValue: _selectedRole,
+                decoration: const InputDecoration(
+                  labelText: 'Role',
+                  prefixIcon: Icon(Icons.badge_outlined, size: 18),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: EmployeeRole.values.map((r) => DropdownMenuItem(value: r, child: Text(r.label))).toList(),
+                onChanged: (v) => v != null ? setState(() => _selectedRole = v) : null,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: DropdownButtonFormField<Department>(
+                initialValue: _selectedDepartment,
+                decoration: const InputDecoration(
+                  labelText: 'Department',
+                  prefixIcon: Icon(Icons.business_outlined, size: 18),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: Department.values.map((d) => DropdownMenuItem(value: d, child: Text(d.label))).toList(),
+                onChanged: (v) => v != null ? setState(() => _selectedDepartment = v) : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _hourlyRateController,
+          decoration: const InputDecoration(
+            labelText: 'Hourly Rate',
+            prefixText: '\$ ',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          validator: (value) {
+            final result = Validators.nonNegative(num.tryParse(value ?? ''), 'Hourly rate');
+            return result.error?.message;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: OutlinedButton(
+              onPressed: () => context.pop(),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Cancel'),
+            ),
           ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _saveEmployee,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(isEditing ? 'Update' : 'Add Employee'),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -248,7 +298,6 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
         : await ref.read(employeeCrudProvider.notifier).create(employee);
 
     setState(() => _isSubmitting = false);
-
     if (!mounted) {
       return;
     }
@@ -264,7 +313,7 @@ class _EmployeeFormScreenState extends ConsumerState<EmployeeFormScreen> {
         }
       case Err<Employee, AppError>(:final error):
         if (mounted) {
-          showPremiumToast(context, message: 'Error: ${error.message}', type: ToastType.error);
+          showPremiumToast(context, message: error.message, type: ToastType.error);
         }
     }
   }

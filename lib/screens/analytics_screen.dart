@@ -11,6 +11,7 @@ import '../providers.dart';
 import '../routing/app_router.dart';
 import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
+import '../ui/hero_section.dart';
 
 /// Analytics screen with stock movement trends, category breakdown, and KPIs.
 class AnalyticsScreen extends ConsumerWidget {
@@ -25,41 +26,22 @@ class AnalyticsScreen extends ConsumerWidget {
     final workforceStatsAsync = ref.watch(workforceStatsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        actions: [
-          IconButton(
-            icon: const Icon(AppIcons.refresh),
-            onPressed: () {
-              ref.invalidate(itemsProvider);
-              ref.invalidate(categoriesProvider);
-              ref.invalidate(recentMovementsProvider);
-              ref.invalidate(employeesProvider);
-              ref.invalidate(workforceStatsProvider);
-              ref.invalidate(movementSummaryProvider);
-            },
-          ),
-        ],
-      ),
       body: ConstrainedContent(
         maxWidth: 1200,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(context.responsivePadding),
+          padding: EdgeInsets.only(
+            left: context.responsivePadding,
+            right: context.responsivePadding,
+            bottom: context.responsivePadding,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Inventory Analytics',
-                style: AppTextStyles.h3.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Track performance and trends',
-                style: AppTextStyles.body.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              const HeroSection(
+                title: 'Inventory Analytics',
+                subtitle: 'Track performance and trends',
+                showLogo: true,
+                showDate: true,
               ),
               const SizedBox(height: 16),
 

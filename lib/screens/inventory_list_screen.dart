@@ -9,6 +9,7 @@ import '../providers.dart';
 import '../routing/app_router.dart';
 import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
+import '../ui/hero_section.dart';
 
 /// Inventory list screen with search, filter, and item cards.
 class InventoryListScreen extends ConsumerStatefulWidget {
@@ -34,43 +35,83 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inventory'),
-        actions: [
-          IconButton(
-            icon: const Icon(AppIcons.import),
-            tooltip: 'Batch Operation',
-            onPressed: () => context.push('/inventory/batch'),
-          ),
-          IconButton(
-            icon: const Icon(AppIcons.filter),
-            onPressed: () => _showFilterSheet(context, categoriesAsync),
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: EdgeInsets.all(context.responsivePadding),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search items or SKU...',
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(AppIcons.close),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(searchQueryProvider.notifier).state = '';
-                        },
-                      )
-                    : null,
+          HeroSection(
+            title: 'Inventory',
+            subtitle: '${itemsAsync.value?.length ?? 0} items total',
+            showLogo: true,
+            showDate: true,
+            stats: [
+              HeroStat(
+                label: 'Total',
+                value: itemsAsync.value?.length.toString() ?? '—',
+                color: Theme.of(context).colorScheme.primary,
               ),
-              onChanged: (value) {
-                ref.read(searchQueryProvider.notifier).state = value;
-              },
+              HeroStat(
+                label: 'Low Stock',
+                value:
+                    itemsAsync.value
+                        ?.where((i) => i.isLowStock)
+                        .length
+                        .toString() ??
+                    '—',
+                color: const Color(0xFFFF9800),
+              ),
+              HeroStat(
+                label: 'Out of Stock',
+                value:
+                    itemsAsync.value
+                        ?.where((i) => i.isOutOfStock)
+                        .length
+                        .toString() ??
+                    '—',
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ],
+          ),
+          // Search bar — constrained width, centered
+          Center(
+            child: ConstrainedContent(
+              maxWidth: 560,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  height: 38,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search items or SKU...',
+                      prefixIcon: const Icon(AppIcons.search, size: 18),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(AppIcons.close, size: 16),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref.read(searchQueryProvider.notifier).state =
+                                    '';
+                              },
+                            )
+                          : null,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                    ),
+                    style: AppTextStyles.bodySmall,
+                    onChanged: (value) {
+                      ref.read(searchQueryProvider.notifier).state = value;
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
           // Category filter chips
@@ -81,36 +122,40 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
             child: ConstrainedContent(
               maxWidth: 1200,
               child: itemsAsync.when(
-              data: (items) {
-                if (items.isEmpty) {
-                  return EmptyState(
-                    icon: AppIcons.inventory,
-                    title: 'No items yet',
-                    subtitle: 'Add your first inventory item to get started.',
-                    actionLabel: 'Add Item',
-                    onAction: () => context.push(AppRoutes.inventoryAdd),
-                  );
-                }
-                return _ItemList(items: items);
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(AppIcons.error, size: 48, color: AppColors.error),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Error loading items',
-                      style: AppTextStyles.body,
-                    ),
-                    const SizedBox(height: 8),
-                    Text('$error', style: AppTextStyles.caption),
-                  ],
+                data: (items) {
+                  if (items.isEmpty) {
+                    return EmptyState(
+                      icon: AppIcons.inventory,
+                      title: 'No items yet',
+                      subtitle: 'Add your first inventory item to get started.',
+                      actionLabel: 'Add Item',
+                      onAction: () => context.push(AppRoutes.inventoryAdd),
+                    );
+                  }
+                  return _ItemList(items: items);
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        AppIcons.error,
+                        size: 48,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Error loading items',
+                        style: AppTextStyles.body,
+                      ),
+                      const SizedBox(height: 8),
+                      Text('$error', style: AppTextStyles.caption),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           ),
         ],
       ),
@@ -119,54 +164,6 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         icon: const Icon(AppIcons.add),
         label: const Text('Add Item'),
       ),
-    );
-  }
-
-  void _showFilterSheet(
-    BuildContext context,
-    AsyncValue<List<Category>> categoriesAsync,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Filter by Category', style: AppTextStyles.h4),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  ref.read(selectedCategoryProvider.notifier).state = null;
-                  context.pop();
-                },
-                child: const Text('All Items'),
-              ),
-              ...categoriesAsync.when(
-                data: (categories) => categories.map(
-                  (c) => ListTile(
-                    title: Text(c.name),
-                    trailing: ref.watch(selectedCategoryProvider) == c.id
-                        ? const Icon(AppIcons.success)
-                        : null,
-                    onTap: () {
-                      ref.read(selectedCategoryProvider.notifier).state = c.id;
-                      context.pop();
-                    },
-                  ),
-                ),
-                loading: () => [],
-                error: (_, _) => [],
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -246,8 +243,8 @@ class _ItemListView extends StatelessWidget {
         final statusColor = item.isOutOfStock
             ? cs.error
             : item.isLowStock
-                ? const Color(0xFFFF9800)
-                : cs.primary;
+            ? const Color(0xFFFF9800)
+            : cs.primary;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -261,7 +258,10 @@ class _ItemListView extends StatelessWidget {
               onTap: () => context.push('/inventory/${item.id}'),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     // Status dot
@@ -280,7 +280,9 @@ class _ItemListView extends StatelessWidget {
                       backgroundColor: statusColor.withValues(alpha: 0.1),
                       child: Text(
                         item.name.substring(0, 1).toUpperCase(),
-                        style: AppTextStyles.labelMedium.copyWith(color: statusColor),
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: statusColor,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -291,7 +293,9 @@ class _ItemListView extends StatelessWidget {
                         children: [
                           Text(
                             item.name,
-                            style: AppTextStyles.body.copyWith(color: cs.onSurface),
+                            style: AppTextStyles.body.copyWith(
+                              color: cs.onSurface,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -314,7 +318,9 @@ class _ItemListView extends StatelessWidget {
                       children: [
                         Text(
                           '\$${item.sellingPrice.toStringAsFixed(2)}',
-                          style: AppTextStyles.labelMedium.copyWith(color: cs.primary),
+                          style: AppTextStyles.labelMedium.copyWith(
+                            color: cs.primary,
+                          ),
                         ),
                         if (item.isOutOfStock)
                           Text(
@@ -389,8 +395,8 @@ class _ItemGridCard extends StatelessWidget {
     final statusColor = item.isOutOfStock
         ? cs.error
         : item.isLowStock
-            ? const Color(0xFFFF9800)
-            : cs.primary;
+        ? const Color(0xFFFF9800)
+        : cs.primary;
 
     return Card(
       elevation: 0,
@@ -420,7 +426,9 @@ class _ItemGridCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '\$${item.sellingPrice.toStringAsFixed(2)}',
-                    style: AppTextStyles.labelMedium.copyWith(color: cs.primary),
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: cs.primary,
+                    ),
                   ),
                 ],
               ),
@@ -469,5 +477,3 @@ class _ItemGridCard extends StatelessWidget {
     );
   }
 }
-
-

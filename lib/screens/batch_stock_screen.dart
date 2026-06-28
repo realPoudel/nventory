@@ -237,19 +237,19 @@ class _BatchStockScreenState extends ConsumerState<BatchStockScreen> {
   Future<void> _applyBatch() async {
     final quantity = int.tryParse(_quantityController.text);
     if (quantity == null || quantity <= 0) {
-      showPremiumSnackBar(
+      showPremiumToast(
         context,
         message: 'Please enter a valid quantity',
-        icon: AppIcons.error,
+        type: ToastType.error,
       );
       return;
     }
 
     if (_selectedItemIds.isEmpty) {
-      showPremiumSnackBar(
+      showPremiumToast(
         context,
         message: 'Please select at least one item',
-        icon: AppIcons.error,
+        type: ToastType.error,
       );
       return;
     }
@@ -283,7 +283,9 @@ class _BatchStockScreenState extends ConsumerState<BatchStockScreen> {
 
     setState(() => _isProcessing = false);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     // Invalidate all relevant providers
     ref.invalidate(itemsProvider);
@@ -294,17 +296,17 @@ class _BatchStockScreenState extends ConsumerState<BatchStockScreen> {
     ref.invalidate(recentMovementsProvider);
 
     if (failCount == 0) {
-      showPremiumSnackBar(
+      showPremiumToast(
         context,
         message: 'Updated $successCount items successfully',
-        icon: AppIcons.success,
+        type: ToastType.success,
       );
       context.pop();
     } else {
-      showPremiumSnackBar(
+      showPremiumToast(
         context,
         message: '$successCount updated, $failCount failed',
-        icon: AppIcons.warning,
+        type: ToastType.warning,
       );
     }
   }

@@ -8,6 +8,7 @@ import '../providers.dart';
 import '../routing/app_router.dart';
 import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
+import '../ui/hero_section.dart';
 
 /// Employees list screen with search, role filter, and directory cards.
 class EmployeesListScreen extends ConsumerStatefulWidget {
@@ -32,31 +33,61 @@ class _EmployeesListScreenState extends ConsumerState<EmployeesListScreen> {
     final employeesAsync = ref.watch(filteredEmployeesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Employees')),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: EdgeInsets.all(context.responsivePadding),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by name or email...',
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(AppIcons.close),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(employeeSearchQueryProvider.notifier).state =
-                              '';
-                        },
-                      )
-                    : null,
+          HeroSection(
+            title: 'Employees',
+            subtitle: '${employeesAsync.value?.length ?? 0} team members',
+            showLogo: true,
+            showDate: true,
+          ),
+          // Search bar — constrained width, centered
+          Center(
+            child: ConstrainedContent(
+              maxWidth: 560,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  height: 38,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search by name or email...',
+                      prefixIcon: const Icon(AppIcons.search, size: 18),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(AppIcons.close, size: 16),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref
+                                        .read(
+                                          employeeSearchQueryProvider.notifier,
+                                        )
+                                        .state =
+                                    '';
+                              },
+                            )
+                          : null,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                    ),
+                    style: AppTextStyles.bodySmall,
+                    onChanged: (value) {
+                      ref.read(employeeSearchQueryProvider.notifier).state =
+                          value;
+                    },
+                  ),
+                ),
               ),
-              onChanged: (value) {
-                ref.read(employeeSearchQueryProvider.notifier).state = value;
-              },
             ),
           ),
           // Role filter chips
@@ -66,31 +97,34 @@ class _EmployeesListScreenState extends ConsumerState<EmployeesListScreen> {
             child: ConstrainedContent(
               maxWidth: 1200,
               child: employeesAsync.when(
-              data: (employees) {
-                if (employees.isEmpty) {
-                  return EmptyState(
-                    icon: AppIcons.people,
-                    title: 'No employees yet',
-                    subtitle: 'Add your first team member to get started.',
-                    actionLabel: 'Add Employee',
-                    onAction: () => context.push(AppRoutes.employeeAdd),
-                  );
-                }
-                return _EmployeeList(employees: employees);
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(AppIcons.error, size: 48, color: AppColors.error),
-                    SizedBox(height: 16),
-                    Text('Error loading employees', style: AppTextStyles.body),
-                  ],
+                data: (employees) {
+                  if (employees.isEmpty) {
+                    return EmptyState(
+                      icon: AppIcons.people,
+                      title: 'No employees yet',
+                      subtitle: 'Add your first team member to get started.',
+                      actionLabel: 'Add Employee',
+                      onAction: () => context.push(AppRoutes.employeeAdd),
+                    );
+                  }
+                  return _EmployeeList(employees: employees);
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(AppIcons.error, size: 48, color: AppColors.error),
+                      SizedBox(height: 16),
+                      Text(
+                        'Error loading employees',
+                        style: AppTextStyles.body,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           ),
         ],
       ),
@@ -183,7 +217,10 @@ class _EmployeeListView extends StatelessWidget {
               onTap: () => context.push('/employees/${employee.id}'),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     // Avatar
@@ -206,7 +243,9 @@ class _EmployeeListView extends StatelessWidget {
                         children: [
                           Text(
                             employee.fullName,
-                            style: AppTextStyles.body.copyWith(color: cs.onSurface),
+                            style: AppTextStyles.body.copyWith(
+                              color: cs.onSurface,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../design/typography.dart';
 import '../persistence/hive_manager.dart';
 import '../persistence/safe_hive.dart';
 import '../providers.dart';
@@ -27,7 +26,6 @@ class AppRoutes {
   static const String dashboard = '/';
   static const String inventory = '/inventory';
   static const String inventoryAdd = '/inventory/add';
-  static const String categories = '/categories';
   static const String employees = '/employees';
   static const String employeeAdd = '/employees/add';
   static const String analytics = '/analytics';
@@ -55,8 +53,7 @@ int locationToNavIndex(String location) {
 
 /// GoRouter configuration for nVentory with ShellRoute for adaptive navigation.
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.dashboard,
-  debugLogDiagnostics: true,
+  initialLocation: AppRoutes.companySetup,
   redirect: (context, state) {
     // Allow the setup screen to always be accessible
     if (state.matchedLocation == AppRoutes.companySetup) {
@@ -132,15 +129,6 @@ final appRouter = GoRouter(
             ),
           ],
         ),
-        // Categories
-        GoRoute(
-          path: AppRoutes.categories,
-          name: 'categories',
-          builder: (context, state) => const _PlaceholderScreen(
-            title: 'Categories',
-            icon: AppIcons.category,
-          ),
-        ),
         // Employees list
         GoRoute(
           path: AppRoutes.employees,
@@ -192,7 +180,8 @@ class AppScaffoldWithSync extends ConsumerStatefulWidget {
   final Widget child;
 
   @override
-  ConsumerState<AppScaffoldWithSync> createState() => _AppScaffoldWithSyncState();
+  ConsumerState<AppScaffoldWithSync> createState() =>
+      _AppScaffoldWithSyncState();
 }
 
 class _AppScaffoldWithSyncState extends ConsumerState<AppScaffoldWithSync> {
@@ -218,41 +207,5 @@ class _AppScaffoldWithSyncState extends ConsumerState<AppScaffoldWithSync> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(child: widget.child);
-  }
-}
-
-/// Placeholder screen for routes not yet implemented.
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title, required this.icon});
-
-  final String title;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64, color: cs.outline),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: AppTextStyles.h3.copyWith(color: cs.onSurface),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Coming soon...',
-              style: AppTextStyles.body.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

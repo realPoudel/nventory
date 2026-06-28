@@ -214,8 +214,6 @@ class AppIcons {
   static const IconData dashboardFilled = Icons.dashboard;
   static const IconData people = Icons.people_outline;
   static const IconData peopleFilled = Icons.people;
-  static const IconData settings = Icons.settings_outlined;
-  static const IconData settingsFilled = Icons.settings;
   static const IconData analytics = Icons.analytics_outlined;
   static const IconData analyticsFilled = Icons.analytics;
 

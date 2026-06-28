@@ -417,10 +417,13 @@ class _MovementTile extends ConsumerWidget {
       confirmLabel: 'Undo',
       cancelLabel: 'Cancel',
     );
-    if (!confirmed || !context.mounted) return;
+    if (!confirmed || !context.mounted) {
+      return;
+    }
 
-    final result =
-        await ref.read(itemCrudProvider.notifier).undoMovement(movement.id);
+    final result = await ref
+        .read(itemCrudProvider.notifier)
+        .undoMovement(movement.id);
 
     switch (result) {
       case Ok<Item, AppError>():
@@ -431,18 +434,18 @@ class _MovementTile extends ConsumerWidget {
         ref.invalidate(lowStockItemsProvider);
         ref.invalidate(dashboardStatsProvider);
         if (context.mounted) {
-          showPremiumSnackBar(
+          showPremiumToast(
             context,
             message: 'Movement undone',
-            icon: AppIcons.success,
+            type: ToastType.success,
           );
         }
       case Err<Item, AppError>(:final error):
         if (context.mounted) {
-          showPremiumSnackBar(
+          showPremiumToast(
             context,
             message: error.message,
-            icon: AppIcons.error,
+            type: ToastType.error,
           );
         }
     }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 import 'typography.dart';
 
 /// Seed-based Material 3 theme generator for nVentory.
@@ -21,7 +20,7 @@ class OliveTheme {
   OliveTheme._();
 
   /// Pure Olive Green root seed token.
-  static const Color oliveSeed = AppColors.oliveSeed; // #6B8E23
+  static const Color oliveSeed = Color(0xFF6B8E23);
 
   /// Generates complete Light Material 3 theme from seed.
   static ThemeData get light {

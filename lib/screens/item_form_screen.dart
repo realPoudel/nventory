@@ -6,11 +6,12 @@ import '../core/result.dart';
 import '../core/validators.dart';
 import '../design/typography.dart';
 import '../models/item_model.dart';
+import '../models/category_model.dart';
 import '../providers.dart';
-import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
 
-/// Add/Edit item form screen.
+/// Add/edit item form — Dialog-style centered layout.
+/// Like Linear/Notion modal overlay with close button.
 class ItemFormScreen extends ConsumerStatefulWidget {
   const ItemFormScreen({super.key, this.item});
 
@@ -43,21 +44,11 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
     final item = widget.item;
     _nameController = TextEditingController(text: item?.name ?? '');
     _skuController = TextEditingController(text: item?.sku ?? '');
-    _descriptionController = TextEditingController(
-      text: item?.description ?? '',
-    );
-    _quantityController = TextEditingController(
-      text: item?.quantity.toString() ?? '0',
-    );
-    _costPriceController = TextEditingController(
-      text: item?.costPrice.toStringAsFixed(2) ?? '0.00',
-    );
-    _sellingPriceController = TextEditingController(
-      text: item?.sellingPrice.toStringAsFixed(2) ?? '0.00',
-    );
-    _lowStockController = TextEditingController(
-      text: item?.lowStockThreshold.toString() ?? '10',
-    );
+    _descriptionController = TextEditingController(text: item?.description ?? '');
+    _quantityController = TextEditingController(text: item?.quantity.toString() ?? '0');
+    _costPriceController = TextEditingController(text: item?.costPrice.toStringAsFixed(2) ?? '0.00');
+    _sellingPriceController = TextEditingController(text: item?.sellingPrice.toStringAsFixed(2) ?? '0.00');
+    _lowStockController = TextEditingController(text: item?.lowStockThreshold.toString() ?? '10');
     _locationController = TextEditingController(text: item?.location ?? '');
     _selectedUnit = item?.unit ?? UnitOfMeasure.pieces;
     _selectedCategoryId = item?.categoryId;
@@ -81,229 +72,253 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Item' : 'Add Item'),
-        actions: [
-          TextButton(
-            onPressed: _isSubmitting ? null : _saveItem,
-            child: Text(
-              'Save',
-              style: AppTextStyles.button.copyWith(
-                color: _isSubmitting
-                    ? Theme.of(context).colorScheme.outline
-                    : Theme.of(context).colorScheme.primary,
-              ),
+      backgroundColor: Colors.black.withValues(alpha: 0.3),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
+          child: Material(
+            elevation: 24,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with close + title
+                _buildHeader(context),
+                // Form body
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildFields(categoriesAsync),
+                          const SizedBox(height: 24),
+                          _buildActions(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Dialog header: title + close button
+  Widget _buildHeader(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              isEditing ? 'Edit Item' : 'Add Item',
+              style: AppTextStyles.h4.copyWith(color: cs.onSurface),
+            ),
+          ),
+          IconButton(
+            icon: Icon(AppIcons.close, size: 18, color: cs.onSurfaceVariant),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
-      body: ConstrainedContent(
-        maxWidth: 800,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(context.responsivePadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Basic info section
-              const SectionHeader(title: 'Basic Information'),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Item Name *',
-                  hintText: 'Enter item name',
-                ),
-                validator: (value) {
-                  final result = Validators.required(value, 'Item name');
-                  return result.error?.message;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _skuController,
-                decoration: const InputDecoration(
-                  labelText: 'SKU *',
-                  hintText: 'e.g., ITEM-001',
-                  prefixIcon: Icon(AppIcons.barcode),
-                ),
-                validator: (value) {
-                  final result = Validators.sku(value, 'SKU');
-                  return result.error?.message;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Optional description',
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
+    );
+  }
 
-              // Category dropdown
-              categoriesAsync.when(
-                data: (categories) => DropdownButtonFormField<String>(
-                  initialValue: _selectedCategoryId,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(AppIcons.category),
-                  ),
-                  items: [
-                    const DropdownMenuItem<String>(
-                      value: null,
-                      child: Text('No Category'),
-                    ),
-                    ...categories.map(
-                      (c) => DropdownMenuItem<String>(
-                        value: c.id,
-                        child: Text(c.name),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() => _selectedCategoryId = value);
-                  },
-                ),
-                loading: () => const LinearProgressIndicator(),
-                error: (_, _) => const SizedBox.shrink(),
-              ),
+  /// Form fields — compact minimal layout
+  Widget _buildFields(AsyncValue<List<Category>> categoriesAsync) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: 'Item Name',
+            hintText: 'Enter item name',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          validator: (value) {
+            final result = Validators.required(value, 'Item name');
+            return result.error?.message;
+          },
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _skuController,
+          decoration: const InputDecoration(
+            labelText: 'SKU',
+            hintText: 'e.g., ITEM-001',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            prefixIcon: Icon(AppIcons.barcode, size: 18),
+          ),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: (value) {
+            final result = Validators.sku(value, 'SKU');
+            return result.error?.message;
+          },
+        ),
+        const SizedBox(height: 14),
 
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Pricing & Stock'),
-              const SizedBox(height: 8),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _costPriceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Cost Price',
-                        prefixText: '\$ ',
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      validator: (value) {
-                        final result = Validators.nonNegative(
-                          num.tryParse(value ?? ''),
-                          'Cost price',
-                        );
-                        return result.error?.message;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _sellingPriceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Selling Price',
-                        prefixText: '\$ ',
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      validator: (value) {
-                        final result = Validators.nonNegative(
-                          num.tryParse(value ?? ''),
-                          'Selling price',
-                        );
-                        return result.error?.message;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _quantityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Quantity *',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (isEditing) {
-                          return null;
-                        }
-                        final result = Validators.nonNegative(
-                          int.tryParse(value ?? ''),
-                          'Quantity',
-                        );
-                        return result.error?.message;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<UnitOfMeasure>(
-                      initialValue: _selectedUnit,
-                      decoration: const InputDecoration(labelText: 'Unit'),
-                      items: UnitOfMeasure.values.map((unit) {
-                        return DropdownMenuItem<UnitOfMeasure>(
-                          value: unit,
-                          child: Text(unit.abbreviation),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedUnit = value);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lowStockController,
-                      decoration: const InputDecoration(
-                        labelText: 'Low Stock Threshold',
-                        helperText: 'Alert when stock falls to this level',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        final result = Validators.nonNegative(
-                          int.tryParse(value ?? ''),
-                          'Threshold',
-                        );
-                        return result.error?.message;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _locationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Location',
-                        hintText: 'e.g., Aisle 3, Shelf B',
-                        prefixIcon: Icon(AppIcons.location),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
+        categoriesAsync.when(
+          data: (categories) => DropdownButtonFormField<String>(
+            initialValue: _selectedCategoryId,
+            decoration: const InputDecoration(
+              labelText: 'Category',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              prefixIcon: Icon(AppIcons.category, size: 18),
+            ),
+            items: [
+              const DropdownMenuItem<String>(value: null, child: Text('No Category')),
+              ...categories.map((c) => DropdownMenuItem<String>(value: c.id, child: Text(c.name))),
             ],
+            onChanged: (value) => setState(() => _selectedCategoryId = value),
+          ),
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) => const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _descriptionController,
+          decoration: const InputDecoration(
+            labelText: 'Description',
+            hintText: 'Optional description',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _costPriceController,
+                decoration: const InputDecoration(
+                  labelText: 'Cost',
+                  prefixText: '\$ ',
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (value) {
+                  final result = Validators.nonNegative(num.tryParse(value ?? ''), 'Cost price');
+                  return result.error?.message;
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextFormField(
+                controller: _sellingPriceController,
+                decoration: const InputDecoration(
+                  labelText: 'Price',
+                  prefixText: '\$ ',
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (value) {
+                  final result = Validators.nonNegative(num.tryParse(value ?? ''), 'Selling price');
+                  return result.error?.message;
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _quantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (isEditing) {
+                    return null;
+                  }
+                  final result = Validators.nonNegative(int.tryParse(value ?? ''), 'Quantity');
+                  return result.error?.message;
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: DropdownButtonFormField<UnitOfMeasure>(
+                initialValue: _selectedUnit,
+                decoration: const InputDecoration(
+                  labelText: 'Unit',
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: UnitOfMeasure.values.map((u) => DropdownMenuItem(value: u, child: Text(u.abbreviation))).toList(),
+                onChanged: (v) => v != null ? setState(() => _selectedUnit = v) : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _locationController,
+          decoration: const InputDecoration(
+            labelText: 'Location',
+            hintText: 'Aisle 3, Shelf B',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            prefixIcon: Icon(AppIcons.location, size: 18),
           ),
         ),
+      ],
+    );
+  }
+
+  /// Dialog actions: Cancel + Save
+  Widget _buildActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: OutlinedButton(
+              onPressed: () => context.pop(),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Cancel'),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _saveItem,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(isEditing ? 'Update' : 'Add Item'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -344,7 +359,6 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
         : await ref.read(itemCrudProvider.notifier).create(item);
 
     setState(() => _isSubmitting = false);
-
     if (!mounted) {
       return;
     }

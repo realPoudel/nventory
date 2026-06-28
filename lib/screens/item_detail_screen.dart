@@ -756,22 +756,22 @@ class _ItemDetailView extends ConsumerWidget {
                         ref.invalidate(dashboardStatsProvider);
                         ref.invalidate(movementsByItemProvider(item.id));
                         if (dialogContext.mounted) {
-                          showPremiumSnackBar(
+                          showPremiumToast(
                             context,
                             message: selectedType == MovementType.stockIn
                                 ? 'Added $quantity ${item.unit.abbreviation}'
                                 : selectedType == MovementType.stockOut
                                 ? 'Removed $quantity ${item.unit.abbreviation}'
                                 : 'Adjusted by $quantity',
-                            icon: AppIcons.success,
+                            type: ToastType.success,
                           );
                         }
                       case Err<Item, AppError>(:final error):
                         if (dialogContext.mounted) {
-                          showPremiumSnackBar(
+                          showPremiumToast(
                             context,
                             message: error.message,
-                            icon: AppIcons.error,
+                            type: ToastType.error,
                           );
                         }
                     }

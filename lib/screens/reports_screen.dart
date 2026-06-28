@@ -6,6 +6,7 @@ import '../models/stock_movement_model.dart';
 import '../providers.dart';
 import '../responsive_breakpoints.dart';
 import '../ui/app_components.dart';
+import '../ui/hero_section.dart';
 
 /// Reports screen with filterable data tables and date range selection.
 class ReportsScreen extends ConsumerStatefulWidget {
@@ -45,6 +46,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       ),
       body: Column(
         children: [
+          const HeroSection(
+            title: 'Reports',
+            subtitle: 'Stock movements, low stock, and valuation',
+            showLogo: true,
+            showDate: true,
+          ),
           // Filter summary bar
           _FilterBar(
             dateRange: _dateRange,
